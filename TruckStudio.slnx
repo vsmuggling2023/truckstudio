@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="TruckStudio/TruckStudio.csproj" />
+  <Project Path="TruckStudioSetup/TruckStudioSetup.vdproj" Type="Installer" />
+</Solution>
