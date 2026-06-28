@@ -43,6 +43,9 @@ namespace TruckStudio.Core
                     Saves = new List<ETS2Save>()
                 };
 
+                // The folder name (ProfileId) is just the hex-encoded string of the profile name.
+                profile.ProfileName = DecodeHexProfileName(profile.ProfileId);
+
                 // Decrypt profile.sii to get actual name
                 var profileSiiPath = Path.Combine(dir, "profile.sii");
                 if (File.Exists(profileSiiPath))
@@ -91,6 +94,24 @@ namespace TruckStudio.Core
             }
 
             return profiles;
+        }
+
+        private static string DecodeHexProfileName(string hex)
+        {
+            if (string.IsNullOrEmpty(hex) || hex.Length % 2 != 0) return hex;
+            try
+            {
+                var bytes = new byte[hex.Length / 2];
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    bytes[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
+                }
+                return System.Text.Encoding.UTF8.GetString(bytes);
+            }
+            catch
+            {
+                return hex;
+            }
         }
     }
 }

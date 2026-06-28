@@ -34,11 +34,11 @@ namespace TruckStudio.Core
 
         public static string FixAllTrucksAndTrailers(string saveContent)
         {
-            // Reset wear (damage) for all parts (engine_wear, chassis_wear, wheels_wear[0], etc.)
-            var content = Regex.Replace(saveContent, @"(?m)^(\s*\w*wear(?:_unfixable)?(?:\[\d+\])?:\s*)[^\r\n]*", "$1 0");
+            // Use a highly precise regex to avoid corrupting the save file (which causes ETS2 to roll back to a backup).
+            // This perfectly mimics the original working regex (\w*wear) but safely adds ETS2 1.50 parts_damage.
+            var content = Regex.Replace(saveContent, @"(?m)^(\s*(?:\w*wear|parts_damage)(?:_unfixable)?(?:\[\d+\])?:\s*)[^\r\n]*", "$1 0");
             
-            // Refuel trucks (float 1.0 or &3f800000)
-            content = Regex.Replace(content, @"(?m)^(\s*fuel_relative:\s*)[^\r\n]*", "$1 1");
+            // Note: We no longer reset fuel here. If they have infinite fuel (25), it stays at 25.
             
             return content;
         }

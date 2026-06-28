@@ -252,7 +252,7 @@
                             <StackPanel x:Name="PanelTrucksEdit" IsEnabled="False" Opacity="0.5">
                                 <TextBlock Text="Fleet Maintenance &amp; Actions" FontSize="18" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,25"/>
                                 
-                                <TextBlock Text="Instantly repair all your trucks and trailers to 100% condition and refuel them." Foreground="#cbd5e1" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                                <TextBlock Text="Instantly repair all your trucks and trailers to 100% condition." Foreground="#cbd5e1" TextWrapping="Wrap" Margin="0,0,0,10"/>
                                 <Button Content="Fix All Trucks &amp; Trailers" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="FixTrucks_Click" Background="#f59e0b" Padding="30,15" Margin="0,0,0,20"/>
                                 
                                 <TextBlock Text="Refuel all your trucks to 100% (without repairing)." Foreground="#cbd5e1" TextWrapping="Wrap" Margin="0,0,0,10"/>
@@ -323,7 +323,7 @@
             </Grid>
             
             <!-- Version Number -->
-            <TextBlock Text="v0.1-alpha" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,15,15" Foreground="#64748b" FontSize="12" IsHitTestVisible="False" Panel.ZIndex="10"/>
+            <TextBlock Text="v0.1.2-alpha" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,15,15" Foreground="#64748b" FontSize="12" IsHitTestVisible="False" Panel.ZIndex="10"/>
         </Grid>
     </Border>
 </Window>

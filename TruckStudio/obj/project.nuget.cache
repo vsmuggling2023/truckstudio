@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "ZWrmgbSMxlY=",
+  "success": true,
+  "projectFilePath": "E:\\otrosproyectos\\truck-tools-main\\TruckStudio\\TruckStudio\\TruckStudio.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Mouli\\.nuget\\packages\\materialdesigncolors\\3.0.0\\materialdesigncolors.3.0.0.nupkg.sha512",
+    "C:\\Users\\Mouli\\.nuget\\packages\\materialdesignthemes\\5.0.0\\materialdesignthemes.5.0.0.nupkg.sha512",
+    "C:\\Users\\Mouli\\.nuget\\packages\\microsoft.xaml.behaviors.wpf\\1.1.39\\microsoft.xaml.behaviors.wpf.1.1.39.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -139,7 +139,7 @@ namespace TruckStudio
             _currentSaveContent = SaveParser.FixAllTrucksAndTrailers(_currentSaveContent);
             System.IO.File.WriteAllText(_currentSavePath, _currentSaveContent);
 
-            MessageBox.Show("All trucks and trailers have been fully repaired and refueled in the save file!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("All trucks and trailers have been fully repaired in the save file!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void RefillFuel_Click(object sender, RoutedEventArgs e)
