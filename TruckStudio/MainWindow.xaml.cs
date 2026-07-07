@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using TruckStudio.Core;
 
@@ -11,6 +9,8 @@ namespace TruckStudio
     {
         private string _currentSavePath;
         private string _currentSaveContent;
+        private System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> _cityCompanies;
+        private System.Collections.Generic.List<string> _cargoes;
 
         public MainWindow()
         {
@@ -91,21 +91,47 @@ namespace TruckStudio
                 
                 if (_currentSaveContent != null)
                 {
+                    // Debug: export decrypted game.sii to desktop
+                    string exportPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "game_debug.sii");
+                    System.IO.File.WriteAllText(exportPath, _currentSaveContent);
+
                     // Enable the editing panels
                     PanelProfileEdit.IsEnabled = true;
-                    PanelProfileEdit.Opacity = 1.0;
+                    PanelProfileEdit.Opacity = 1;
                     PanelTrucksEdit.IsEnabled = true;
-                    PanelTrucksEdit.Opacity = 1.0;
-                    PanelJobsEdit.IsEnabled = true;
-                    PanelJobsEdit.Opacity = 1.0;
+                    PanelTrucksEdit.Opacity = 1;
                     PanelWorldEdit.IsEnabled = true;
-                    PanelWorldEdit.Opacity = 1.0;
+                    PanelWorldEdit.Opacity = 1;
                     PanelTuningEdit.IsEnabled = true;
-                    PanelTuningEdit.Opacity = 1.0;
+                    PanelTuningEdit.Opacity = 1;
 
-                    // Extract actual data
                     TxtMoney.Text = SaveParser.ExtractMoney(_currentSaveContent);
                     TxtExperience.Text = SaveParser.ExtractXP(_currentSaveContent);
+
+                    // Enable Freight Market panel
+                    PanelFreightEdit.IsEnabled = true;
+                    PanelFreightEdit.Opacity = 1;
+
+                    // Parse cities, companies, and cargoes
+                    _cityCompanies = SaveParser.ExtractCitiesAndCompanies(_currentSaveContent);
+                    _cargoes = SaveParser.ExtractCargoes(_currentSaveContent);
+
+                    // Populate ComboBoxes
+                    var citiesList = _cityCompanies.Keys.OrderBy(c => c).ToList();
+                    CbSourceCity.ItemsSource = citiesList;
+                    CbDestCity.ItemsSource = citiesList;
+                    CbCargo.ItemsSource = _cargoes;
+
+                    if (citiesList.Count > 0)
+                    {
+                        CbSourceCity.SelectedIndex = 0;
+                        CbDestCity.SelectedIndex = 0;
+                    }
+                    if (_cargoes.Count > 0)
+                    {
+                        CbCargo.SelectedIndex = 0;
+                    }
+
                     
                     MessageBox.Show("Profile successfully loaded! You can now edit.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
@@ -305,9 +331,9 @@ namespace TruckStudio
             PageTitle.Text = "Player Profile";
             PageProfile.Visibility = Visibility.Visible;
             PageTrucks.Visibility = Visibility.Collapsed;
-            PageJobs.Visibility = Visibility.Collapsed;
             PageWorld.Visibility = Visibility.Collapsed;
             PageTuning.Visibility = Visibility.Collapsed;
+            PageFreight.Visibility = Visibility.Collapsed;
         }
 
         private void NavTrucks_Click(object sender, RoutedEventArgs e)
@@ -315,19 +341,9 @@ namespace TruckStudio
             PageTitle.Text = "Trucks & Trailers";
             PageProfile.Visibility = Visibility.Collapsed;
             PageTrucks.Visibility = Visibility.Visible;
-            PageJobs.Visibility = Visibility.Collapsed;
             PageWorld.Visibility = Visibility.Collapsed;
             PageTuning.Visibility = Visibility.Collapsed;
-        }
-
-        private void NavJobs_Click(object sender, RoutedEventArgs e)
-        {
-            PageTitle.Text = "Jobs Market";
-            PageProfile.Visibility = Visibility.Collapsed;
-            PageTrucks.Visibility = Visibility.Collapsed;
-            PageJobs.Visibility = Visibility.Visible;
-            PageWorld.Visibility = Visibility.Collapsed;
-            PageTuning.Visibility = Visibility.Collapsed;
+            PageFreight.Visibility = Visibility.Collapsed;
         }
 
         private void NavWorld_Click(object sender, RoutedEventArgs e)
@@ -335,9 +351,9 @@ namespace TruckStudio
             PageTitle.Text = "World & Map";
             PageProfile.Visibility = Visibility.Collapsed;
             PageTrucks.Visibility = Visibility.Collapsed;
-            PageJobs.Visibility = Visibility.Collapsed;
             PageWorld.Visibility = Visibility.Visible;
             PageTuning.Visibility = Visibility.Collapsed;
+            PageFreight.Visibility = Visibility.Collapsed;
         }
 
         private void NavTuning_Click(object sender, RoutedEventArgs e)
@@ -345,9 +361,116 @@ namespace TruckStudio
             PageTitle.Text = "Pro Tuning";
             PageProfile.Visibility = Visibility.Collapsed;
             PageTrucks.Visibility = Visibility.Collapsed;
-            PageJobs.Visibility = Visibility.Collapsed;
             PageWorld.Visibility = Visibility.Collapsed;
             PageTuning.Visibility = Visibility.Visible;
+            PageFreight.Visibility = Visibility.Collapsed;
+        }
+
+        private void NavFreight_Click(object sender, RoutedEventArgs e)
+        {
+            PageTitle.Text = "Freight Market";
+            PageProfile.Visibility = Visibility.Collapsed;
+            PageTrucks.Visibility = Visibility.Collapsed;
+            PageWorld.Visibility = Visibility.Collapsed;
+            PageTuning.Visibility = Visibility.Collapsed;
+            PageFreight.Visibility = Visibility.Visible;
+        }
+
+        private void CbSourceCity_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (_cityCompanies == null) return;
+            string selectedCity = CbSourceCity.SelectedItem as string;
+            if (!string.IsNullOrEmpty(selectedCity) && _cityCompanies.ContainsKey(selectedCity))
+            {
+                var companies = _cityCompanies[selectedCity].OrderBy(c => c).ToList();
+                CbSourceCompany.ItemsSource = companies;
+                if (companies.Count > 0)
+                {
+                    CbSourceCompany.SelectedIndex = 0;
+                }
+            }
+            else
+            {
+                CbSourceCompany.ItemsSource = null;
+            }
+        }
+
+        private void CbDestCity_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (_cityCompanies == null) return;
+            string selectedCity = CbDestCity.SelectedItem as string;
+            if (!string.IsNullOrEmpty(selectedCity) && _cityCompanies.ContainsKey(selectedCity))
+            {
+                var companies = _cityCompanies[selectedCity].OrderBy(c => c).ToList();
+                CbDestCompany.ItemsSource = companies;
+                if (companies.Count > 0)
+                {
+                    CbDestCompany.SelectedIndex = 0;
+                }
+            }
+            else
+            {
+                CbDestCompany.ItemsSource = null;
+            }
+        }
+
+        private void InjectJob_Click(object sender, RoutedEventArgs e)
+        {
+            SaveParser.Log("UI Clicked: Inject Custom Job");
+            if (string.IsNullOrEmpty(_currentSavePath) || string.IsNullOrEmpty(_currentSaveContent))
+            {
+                SaveParser.Log("UI: Save path or content is null!");
+                MessageBox.Show("Please load a save file first.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string sourceCity = CbSourceCity.SelectedItem as string;
+            string sourceCompany = CbSourceCompany.SelectedItem as string;
+            string destCity = CbDestCity.SelectedItem as string;
+            string destCompany = CbDestCompany.SelectedItem as string;
+            string cargo = CbCargo.SelectedItem as string;
+            int urgency = CbUrgency.SelectedIndex; // 0 = Normal, 1 = Important, 2 = Urgent
+
+            SaveParser.Log($"UI Selected: Source={sourceCity} ({sourceCompany}), Dest={destCity} ({destCompany}), Cargo={cargo}, Urgency={urgency}");
+
+            if (string.IsNullOrEmpty(sourceCity) || string.IsNullOrEmpty(sourceCompany) ||
+                string.IsNullOrEmpty(destCity) || string.IsNullOrEmpty(destCompany) ||
+                string.IsNullOrEmpty(cargo))
+            {
+                SaveParser.Log("UI: Validation error!");
+                MessageBox.Show("Please fill all job settings before injecting.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            int distVal = 15;
+            if (sourceCity != destCity)
+            {
+                int seed = (sourceCity + destCity + cargo).GetHashCode();
+                var rnd = new Random(seed);
+                distVal = rnd.Next(350, 750);
+            }
+            string distance = distVal.ToString();
+            SaveParser.Log($"UI: Calculated distance={distance}");
+
+            try
+            {
+                SaveParser.Log("UI: Calling InjectFreightJob...");
+                _currentSaveContent = SaveParser.InjectFreightJob(_currentSaveContent, sourceCity, sourceCompany, destCity, destCompany, cargo, urgency, distance);
+                
+                SaveParser.Log($"UI: Writing updated content to file: {_currentSavePath}...");
+                System.IO.File.WriteAllText(_currentSavePath, _currentSaveContent);
+                SaveParser.Log("UI: File successfully written!");
+
+                string urgencyText = (CbUrgency.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content.ToString() ?? "Normal";
+                SaveParser.Log("UI: Showing success MessageBox...");
+                MessageBox.Show($"Custom Job successfully injected!\nRoute: {sourceCity} ({sourceCompany}) -> {destCity} ({destCompany})\nCargo: {cargo}\nUrgency: {urgencyText}\nDistance: {distance} km (auto-calculated)\n\nLoad this save in Euro Truck Simulator 2 and check {sourceCompany} in {sourceCity}!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                SaveParser.Log("UI: MessageBox dismissed");
+            }
+            catch (Exception ex)
+            {
+                SaveParser.Log($"UI: Exception occurred: {ex}");
+                MessageBox.Show($"Failed to inject job: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }
