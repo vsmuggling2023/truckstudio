@@ -100,8 +100,6 @@ namespace TruckStudio
                     PanelProfileEdit.Opacity = 1;
                     PanelTrucksEdit.IsEnabled = true;
                     PanelTrucksEdit.Opacity = 1;
-                    PanelWorldEdit.IsEnabled = true;
-                    PanelWorldEdit.Opacity = 1;
                     PanelTuningEdit.IsEnabled = true;
                     PanelTuningEdit.Opacity = 1;
 
