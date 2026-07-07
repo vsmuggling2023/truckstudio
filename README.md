@@ -2,7 +2,7 @@
 
 **Version:** v0.1.3-alpha
 
-⚠️ **Important Note:** This tool is exclusively designed and developed for **Euro Truck Simulator 2 (ETS2)**. It does not support American Truck Simulator (ATS)
+⚠️ **Important Note:** This tool is exclusively designed and developed for **Euro Truck Simulator 2 (ETS2)**. It does not support American Truck Simulator (ATS) or other games.
 
 ## Overview / What does this program do?
 **TruckStudio** is a powerful and easy-to-use desktop application designed to modify and enhance your save games in **Euro Truck Simulator 2**. 
@@ -23,7 +23,7 @@ The following features are fully implemented and functional in version v0.1.3-al
 
 ### 💼 Jobs Market
 - **Fix Cargo Damage:** Accidentally damaged your delivery? Magically reset active cargo damage back to 0% to ensure full payment upon delivery.
-- **Freight Market Cargo Injection:** Inject custom cargo offers directly into any company. Select any source/destination cities and companies, choose your cargo, and TruckStudio will automatically calculate a compatible trailer and update the game's economy event queue safely.
+- **Freight Market Cargo Injection:** Inject custom cargo offers directly into any company. Select any source/destination cities and companies, choose your cargo, and TruckStudio will automatically calculate a compatible trailer and update the game's economy event queue safely. *(Note: This is exclusively for the Freight Market where you haul company-provided trailers; it does not support Cargo Market/owned trailers).*
 
 ### 🌍 World & Map
 - **Unlock All Garages:** Instantly purchase and unlock every garage across the entire map.
