@@ -107,46 +107,78 @@ namespace TruckStudio.Core
             string[] separator = new string[] { "\r\n", "\n" };
             string[] lines = saveContent.Split(separator, StringSplitOptions.None);
 
+            string pendingCompany = null;
+            string pendingCity = null;
+            bool inCompanyBlock = false;
+            bool hasJobSlot = false;
+            int braceDepth = 0;
+
             foreach (var line in lines)
             {
-                if (line.Contains("company.volatile."))
-                {
-                    int colonIdx = line.IndexOf(':');
-                    if (colonIdx != -1)
-                    {
-                        string key = line.Substring(0, colonIdx).Trim();
-                        if (key == "company")
-                        {
-                            string val = line.Substring(colonIdx + 1).Trim();
-                            if (val.EndsWith("{"))
-                            {
-                                val = val.Substring(0, val.Length - 1).Trim();
-                            }
-                            if (val.StartsWith("company.volatile."))
-                            {
-                                string sub = val.Substring(17); // lkw_log.paris
-                                int dotIdx = sub.LastIndexOf('.');
-                                if (dotIdx != -1)
-                                {
-                                    string company = sub.Substring(0, dotIdx);
-                                    string city = sub.Substring(dotIdx + 1);
+                string trimmed = line.Trim();
 
-                                    if (!cityCompanies.ContainsKey(city))
+                if (!inCompanyBlock)
+                {
+                    // Detect company block header: company : company.volatile.X.Y {
+                    if (trimmed.StartsWith("company") && trimmed.Contains("company.volatile."))
+                    {
+                        int colonIdx = line.IndexOf(':');
+                        if (colonIdx != -1)
+                        {
+                            string key = line.Substring(0, colonIdx).Trim();
+                            if (key == "company")
+                            {
+                                string val = line.Substring(colonIdx + 1).Trim();
+                                if (val.EndsWith("{")) val = val.Substring(0, val.Length - 1).Trim();
+                                if (val.StartsWith("company.volatile."))
+                                {
+                                    string sub = val.Substring(17);
+                                    int dotIdx = sub.LastIndexOf('.');
+                                    if (dotIdx != -1)
                                     {
-                                        cityCompanies[city] = new System.Collections.Generic.List<string>();
-                                    }
-                                    if (!cityCompanies[city].Contains(company))
-                                    {
-                                        cityCompanies[city].Add(company);
+                                        pendingCompany = sub.Substring(0, dotIdx);
+                                        pendingCity    = sub.Substring(dotIdx + 1);
+                                        inCompanyBlock = true;
+                                        hasJobSlot     = false;
+                                        braceDepth     = 1; // the opening { on this line
                                     }
                                 }
                             }
                         }
                     }
                 }
+                else
+                {
+                    // Track brace depth to know when the company block ends
+                    foreach (char c in trimmed)
+                    {
+                        if (c == '{') braceDepth++;
+                        else if (c == '}') braceDepth--;
+                    }
+
+                    // Check for any job_offer[N] line
+                    if (!hasJobSlot && trimmed.StartsWith("job_offer["))
+                        hasJobSlot = true;
+
+                    // Block closed
+                    if (braceDepth <= 0)
+                    {
+                        if (hasJobSlot && pendingCompany != null && pendingCity != null)
+                        {
+                            if (!cityCompanies.ContainsKey(pendingCity))
+                                cityCompanies[pendingCity] = new System.Collections.Generic.List<string>();
+                            if (!cityCompanies[pendingCity].Contains(pendingCompany))
+                                cityCompanies[pendingCity].Add(pendingCompany);
+                        }
+                        inCompanyBlock = false;
+                        pendingCompany = null;
+                        pendingCity    = null;
+                    }
+                }
             }
             return cityCompanies;
         }
+
 
         public static System.Collections.Generic.List<string> ExtractCargoes(string saveContent)
         {
@@ -399,6 +431,63 @@ namespace TruckStudio.Core
             catch {}
         }
 
+        /// <summary>
+        /// Reads the shortest_distance_km already stored in the first job offer slot of the given
+        /// source company, so the UI can pre-fill the Distance field automatically.
+        /// Returns 0 if the value cannot be found.
+        /// </summary>
+        public static int ExtractJobDistance(string saveContent, string sourceCity, string sourceCompany)
+        {
+            try
+            {
+                // Find the company block
+                var companyRegex = new Regex($@"company\s*:\s*company\.volatile\.{Regex.Escape(sourceCompany)}\.{Regex.Escape(sourceCity)}\b");
+                var companyMatch = companyRegex.Match(saveContent);
+                if (!companyMatch.Success) return 0;
+
+                int headerIdx = companyMatch.Index;
+                int openBraceIdx = saveContent.IndexOf('{', headerIdx);
+                if (openBraceIdx == -1) return 0;
+
+                int braceCount = 1, closeBraceIdx = -1;
+                for (int i = openBraceIdx + 1; i < saveContent.Length; i++)
+                {
+                    if (saveContent[i] == '{') braceCount++;
+                    else if (saveContent[i] == '}') { braceCount--; if (braceCount == 0) { closeBraceIdx = i; break; } }
+                }
+                if (closeBraceIdx == -1) return 0;
+
+                string companyBlock = saveContent.Substring(headerIdx, closeBraceIdx - headerIdx + 1);
+                var jobOfferMatch = Regex.Match(companyBlock, @"job_offer\[0\]:\s*([_a-zA-Z0-9.]+)");
+                if (!jobOfferMatch.Success) return 0;
+
+                string jobOfferId = jobOfferMatch.Groups[1].Value;
+
+                // Locate the job_offer_data block
+                string jobOfferHeader = $"job_offer_data : {jobOfferId}";
+                int jobHeaderIdx = saveContent.IndexOf(jobOfferHeader);
+                if (jobHeaderIdx == -1) return 0;
+
+                int jobOpenBraceIdx = saveContent.IndexOf('{', jobHeaderIdx);
+                if (jobOpenBraceIdx == -1) return 0;
+
+                int jobBrace = 1, jobCloseBraceIdx = -1;
+                for (int i = jobOpenBraceIdx + 1; i < saveContent.Length; i++)
+                {
+                    if (saveContent[i] == '{') jobBrace++;
+                    else if (saveContent[i] == '}') { jobBrace--; if (jobBrace == 0) { jobCloseBraceIdx = i; break; } }
+                }
+                if (jobCloseBraceIdx == -1) return 0;
+
+                string jobBlock = saveContent.Substring(jobHeaderIdx, jobCloseBraceIdx - jobHeaderIdx + 1);
+                var distMatch = Regex.Match(jobBlock, @"shortest_distance_km:\s*(\d+)");
+                if (distMatch.Success && int.TryParse(distMatch.Groups[1].Value, out int dist))
+                    return dist;
+            }
+            catch { }
+            return 0;
+        }
+
         public static string InjectFreightJob(string saveContent, string sourceCity, string sourceCompany, string destCity, string destCompany, string cargo, int urgency, string distance)
         {
             Log("InjectFreightJob: Start");
@@ -442,8 +531,15 @@ namespace TruckStudio.Core
                     }
                 }
             }
+            // Calculate distance-based expiration time to prevent "Late" status on long routes
             Log($"InjectFreightJob: gameTime={gameTime}");
-            uint expirationTime = gameTime + 2000; // valid for ~33 game hours
+            int distVal = 0;
+            int.TryParse(distance, out distVal);
+            // Average speed assumption: 60 km/h -> 1 minute per km. 
+            // We use (distVal * 2) to give a generous driving time margin, plus a 3-day (4320 minutes) base buffer.
+            uint drivingTimeMargin = (uint)(distVal * 2);
+            uint expirationTime = gameTime + drivingTimeMargin + 4320;
+            Log($"InjectFreightJob: distVal={distVal}, drivingMargin={drivingTimeMargin}, expirationTime={expirationTime}");
 
             // Find the company block using regex to support spacing variations around the colon
             Log($"InjectFreightJob: Matching company regex for company.volatile.{sourceCompany}.{sourceCity}...");
@@ -490,12 +586,24 @@ namespace TruckStudio.Core
             string companyBlock = saveContent.Substring(headerIdx, closeBraceIdx - headerIdx + 1);
             Log("InjectFreightJob: Company block extracted");
 
-            // Extract the nameless ID of the first job offer slot
-            var jobOfferMatch = Regex.Match(companyBlock, @"job_offer\[0\]:\s*([_a-zA-Z0-9.]+)");
+            // Find the first available job offer slot (try [0] through [9])
+            Match jobOfferMatch = Match.Empty;
+            for (int slot = 0; slot <= 9; slot++)
+            {
+                jobOfferMatch = Regex.Match(companyBlock, $@"job_offer\[{slot}\]:\s*([_a-zA-Z0-9.]+)");
+                if (jobOfferMatch.Success)
+                {
+                    Log($"InjectFreightJob: Using job_offer[{slot}]");
+                    break;
+                }
+            }
             if (!jobOfferMatch.Success)
             {
-                Log("InjectFreightJob: ERROR: This company does not have any active job offer slots to edit!");
-                throw new Exception("This company does not have any active job offer slots to edit.");
+                Log("InjectFreightJob: ERROR: This company has no job offer slots (visit it in-game first).");
+                throw new Exception(
+                    $"The company '{sourceCompany}' in '{sourceCity}' has no job offer slots available.\n\n" +
+                    "This usually means the company hasn't generated any jobs yet.\n" +
+                    "Fix: Load your save in ETS2, drive near or visit this company, save the game, then try again.");
             }
 
             string jobOfferId = jobOfferMatch.Groups[1].Value;

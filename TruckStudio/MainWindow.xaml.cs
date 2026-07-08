@@ -393,6 +393,7 @@ namespace TruckStudio
             }
         }
 
+
         private void CbDestCity_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
             if (_cityCompanies == null) return;
@@ -440,15 +441,11 @@ namespace TruckStudio
                 return;
             }
 
-            int distVal = 15;
-            if (sourceCity != destCity)
-            {
-                int seed = (sourceCity + destCity + cargo).GetHashCode();
-                var rnd = new Random(seed);
-                distVal = rnd.Next(350, 750);
-            }
-            string distance = distVal.ToString();
-            SaveParser.Log($"UI: Calculated distance={distance}");
+            // Always use 5000 km: this guarantees the game gives enough delivery time for ANY
+            // route in ETS2 Europe (Algeciras → Saint Petersburg = ~4400 km is the longest).
+            // expiration = gameTime + 5000*2 + 4320 = gameTime + 14320 min (~10 days game time)
+            string distance = "5000";
+            SaveParser.Log("UI: Distance fixed=5000 km");
 
             try
             {
@@ -461,7 +458,7 @@ namespace TruckStudio
 
                 string urgencyText = (CbUrgency.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content.ToString() ?? "Normal";
                 SaveParser.Log("UI: Showing success MessageBox...");
-                MessageBox.Show($"Custom Job successfully injected!\nRoute: {sourceCity} ({sourceCompany}) -> {destCity} ({destCompany})\nCargo: {cargo}\nUrgency: {urgencyText}\nDistance: {distance} km (auto-calculated)\n\nLoad this save in Euro Truck Simulator 2 and check {sourceCompany} in {sourceCity}!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Custom Job successfully injected!\nRoute: {sourceCity} ({sourceCompany}) -> {destCity} ({destCompany})\nCargo: {cargo}\nUrgency: {urgencyText}\nDistance: {distance} km\n\nLoad this save in Euro Truck Simulator 2 and check {sourceCompany} in {sourceCity}!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 SaveParser.Log("UI: MessageBox dismissed");
             }
             catch (Exception ex)
