@@ -284,10 +284,19 @@
                             <StackPanel x:Name="PanelWorldEdit" IsEnabled="False" Opacity="0.5">
                                 <TextBlock Text="World &amp; Map Exploits" FontSize="18" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,25"/>
                                 
-                                <TextBlock Text="Unlock every garage, city, and dealership instantly across the entire map." Foreground="#cbd5e1" TextWrapping="Wrap" Margin="0,0,0,20"/>
+                                <TextBlock Text="World &amp; Map Exploits" FontSize="18" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,25"/>
                                 
-                                <Button Content="Unlock All Garages" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,0,0,10" Background="#f43f5e" Padding="30,15" Click="UnlockGarages_Click"/>
-                                <Button Content="Discover All Dealerships" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Background="#0ea5e9" Padding="30,15" Click="UnlockDealers_Click"/>
+                                <!-- Visit All Garages -->
+                                <TextBlock Text="Unlock every city without buying garages. Sets all undiscovered garages to the minimum (Small) so you can upgrade manually." Foreground="#cbd5e1" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                                <Button Content="Visit All Garages" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,0,0,20" Background="#0ea5e9" Padding="30,15" Click="VisitGarages_Click"/>
+
+                                <!-- Upgrade Owned Garages -->
+                                <TextBlock Text="Upgrade every garage you already own to maximum size (6 slots). Does not buy garages you don't own yet." Foreground="#cbd5e1" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                                <Button Content="Upgrade All Owned Garages" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,0,0,20" Background="#10b981" Padding="30,15" Click="UpgradeGarages_Click"/>
+
+                                <!-- Buy All Garages -->
+                                <TextBlock Text="Purchase and fully upgrade every garage to maximum size (6 slots) across the entire map." Foreground="#cbd5e1" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                                <Button Content="Buy All Garages" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Background="#f43f5e" Padding="30,15" Click="BuyAllGarages_Click"/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -303,7 +312,7 @@
                                 <Button Content="Max Out All Skills" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,0,0,10" Background="#10b981" Padding="30,15" Click="MaxSkills_Click"/>
                                 
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                    <Button Content="50000km (Extended Fuel)" Style="{StaticResource PrimaryButton}" Background="#fbbf24" Foreground="Black" Padding="30,15" Click="InfiniteFuel_Click" Margin="0,0,10,0"/>
+                                    <Button Content="Extended Fuel (Set km)" Style="{StaticResource PrimaryButton}" Background="#fbbf24" Foreground="Black" Padding="30,15" Click="InfiniteFuel_Click" Margin="0,0,10,0"/>
                                     <Button Content="Restore Fuel" Style="{StaticResource PrimaryButton}" Background="#3b82f6" Padding="30,15" Click="RestoreFuel_Click"/>
                                 </StackPanel>
                             </StackPanel>
@@ -361,7 +370,7 @@
             </Grid>
             
             <!-- Version Number -->
-            <TextBlock Text="v0.1.4-alpha" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,15,15" Foreground="#64748b" FontSize="12" IsHitTestVisible="False" Panel.ZIndex="10"/>
+            <TextBlock Text="v0.1.5-alpha" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,15,15" Foreground="#64748b" FontSize="12" IsHitTestVisible="False" Panel.ZIndex="10"/>
         </Grid>
     </Border>
 </Window>

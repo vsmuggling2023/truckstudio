@@ -48,15 +48,51 @@ namespace TruckStudio.Core
 
         public static string MaxSkills(string saveContent)
         {
-            // adr is a bitmask for 6 skills (63 = 111111)
-            var content = Regex.Replace(saveContent, @"(?m)^(\s*adr:\s*)[^\r\n]*", "$1 63");
+            // Find the economy block
+            int econStart = saveContent.IndexOf("economy : ");
+            if (econStart == -1)
+                return saveContent;
+
+            int econOpenBrace = saveContent.IndexOf("{", econStart);
+            if (econOpenBrace == -1)
+                return saveContent;
+
+            // Find the closing brace of the economy block
+            int econEnd = -1;
+            int braceCount = 1;
+            for (int i = econOpenBrace + 1; i < saveContent.Length; i++)
+            {
+                if (saveContent[i] == '{') braceCount++;
+                else if (saveContent[i] == '}')
+                {
+                    braceCount--;
+                    if (braceCount == 0)
+                    {
+                        econEnd = i;
+                        break;
+                    }
+                }
+            }
+
+            if (econEnd == -1)
+                return saveContent;
+
+            string econBlock = saveContent.Substring(econOpenBrace, econEnd - econOpenBrace + 1);
+
+            // Replace skills inside the economy block only
+            econBlock = Regex.Replace(econBlock, @"(?m)^(\s*adr:\s*)[^\r\n]*", "$1 63");
             
             string[] skills = { "long_dist", "heavy", "fragile", "urgent", "mechanical" };
             foreach (var skill in skills)
             {
-                content = Regex.Replace(content, $@"(?m)^(\s*{skill}:\s*)[^\r\n]*", "$1 6");
+                econBlock = Regex.Replace(econBlock, $@"(?m)^(\s*{skill}:\s*)[^\r\n]*", "$1 6");
             }
-            return content;
+
+            // Put it back
+            string prefix = saveContent.Substring(0, econOpenBrace);
+            string suffix = saveContent.Substring(econEnd + 1);
+
+            return prefix + econBlock + suffix;
         }
 
         public static string FixCargoDamage(string saveContent)
