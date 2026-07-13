@@ -1,7 +1,5 @@
 # TruckStudio
 
-**Version:** v0.1.3-alpha
-
 ⚠️ **Important Note:** This tool is exclusively designed and developed for **Euro Truck Simulator 2 (ETS2)**. It does not support American Truck Simulator (ATS) or other games.
 
 ## Overview / What does this program do?
