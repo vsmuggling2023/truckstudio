@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="TruckStudio/TruckStudio.csproj" />
+  <Project Path="TruckStudioUpdater/TruckStudioUpdater.csproj" />
 </Solution>

@@ -17,4 +17,8 @@
     </Content>
     <PackageReference Include="MaterialDesignThemes" Version="5.0.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TruckStudioUpdater\TruckStudioUpdater.csproj" />
+  </ItemGroup>
 </Project>

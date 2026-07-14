@@ -20,16 +20,23 @@ namespace TruckStudio.Core
         public DateTime LastModified { get; set; }
     }
 
+    public enum GameType
+    {
+        ETS2,
+        ATS
+    }
+
     public static class ProfileManager
     {
-        public static string GetEts2ProfilesPath()
+        public static string GetProfilesPath(GameType game)
         {
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Euro Truck Simulator 2", "profiles");
+            string folder = game == GameType.ETS2 ? "Euro Truck Simulator 2" : "American Truck Simulator";
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), folder, "profiles");
         }
 
-        public static List<ETS2Profile> GetProfiles()
+        public static List<ETS2Profile> GetProfiles(GameType game)
         {
-            var profilesPath = GetEts2ProfilesPath();
+            var profilesPath = GetProfilesPath(game);
             var profiles = new List<ETS2Profile>();
 
             if (!Directory.Exists(profilesPath)) return profiles;
