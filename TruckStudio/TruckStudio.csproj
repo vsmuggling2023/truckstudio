@@ -21,4 +21,8 @@
   <ItemGroup>
     <ProjectReference Include="..\TruckStudioUpdater\TruckStudioUpdater.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\TruckStudioUpdater\bin\$(Configuration)\net472\TruckStudioUpdater.exe" Link="Resources\TruckStudioUpdater.exe" />
+  </ItemGroup>
 </Project>

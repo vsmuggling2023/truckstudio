@@ -14,16 +14,146 @@ namespace TruckStudio
         private GameType _currentGame = GameType.ETS2;
         private string _currentLanguage = "en";
         private bool _isDarkTheme = true;
+        private bool _isLoadingSettings = false;
 
         public MainWindow()
         {
             InitializeComponent();
-            ApplyTheme(true);
+            ExtractUpdater();
+            LoadSettings();
+            ApplyTheme(_isDarkTheme);
             Loaded += MainWindow_Loaded;
+        }
+
+        private void ExtractUpdater()
+        {
+            try
+            {
+                string appDir = System.IO.Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
+                string updaterPath = System.IO.Path.Combine(appDir, "TruckStudioUpdater.exe");
+
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                string resourceName = "TruckStudio.Resources.TruckStudioUpdater.exe";
+
+                using (var stream = assembly.GetManifestResourceStream(resourceName))
+                {
+                    if (stream != null)
+                    {
+                        bool shouldWrite = true;
+                        if (System.IO.File.Exists(updaterPath))
+                        {
+                            try
+                            {
+                                var fileInfo = new System.IO.FileInfo(updaterPath);
+                                if (fileInfo.Length == stream.Length)
+                                {
+                                    shouldWrite = false;
+                                }
+                            }
+                            catch { }
+                        }
+
+                        if (shouldWrite)
+                        {
+                            if (System.IO.File.Exists(updaterPath))
+                            {
+                                try
+                                {
+                                    System.IO.File.Delete(updaterPath);
+                                }
+                                catch
+                                {
+                                    string backup = updaterPath + ".bak";
+                                    if (System.IO.File.Exists(backup)) System.IO.File.Delete(backup);
+                                    System.IO.File.Move(updaterPath, backup);
+                                }
+                            }
+
+                            using (var fileStream = new System.IO.FileStream(updaterPath, System.IO.FileMode.Create, System.IO.FileAccess.Write))
+                            {
+                                stream.CopyTo(fileStream);
+                            }
+                        }
+                    }
+                }
+            }
+            catch {}
+        }
+
+        private void LoadSettings()
+        {
+            try
+            {
+                string folder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TruckStudio");
+                string settingsFile = System.IO.Path.Combine(folder, "settings.cfg");
+                if (System.IO.File.Exists(settingsFile))
+                {
+                    var lines = System.IO.File.ReadAllLines(settingsFile);
+                    foreach (var line in lines)
+                    {
+                        var parts = line.Split('=');
+                        if (parts.Length == 2)
+                        {
+                            string key = parts[0].Trim();
+                            string value = parts[1].Trim();
+                            if (key == "Language")
+                            {
+                                _currentLanguage = value;
+                            }
+                            else if (key == "Theme")
+                            {
+                                _isDarkTheme = (value == "dark");
+                            }
+                        }
+                    }
+                }
+            }
+            catch {}
+        }
+
+        private void SaveSettings()
+        {
+            try
+            {
+                string folder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TruckStudio");
+                if (!System.IO.Directory.Exists(folder))
+                {
+                    System.IO.Directory.CreateDirectory(folder);
+                }
+                string settingsFile = System.IO.Path.Combine(folder, "settings.cfg");
+                var lines = new string[]
+                {
+                    $"Language={_currentLanguage}",
+                    $"Theme={(_isDarkTheme ? "dark" : "light")}"
+                };
+                System.IO.File.WriteAllLines(settingsFile, lines);
+            }
+            catch {}
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            _isLoadingSettings = true;
+            if (_currentLanguage == "es")
+            {
+                CbSettingsLanguage.SelectedItem = ComboLangEs;
+            }
+            else
+            {
+                CbSettingsLanguage.SelectedItem = ComboLangEn;
+            }
+
+            if (_isDarkTheme)
+            {
+                CbSettingsTheme.SelectedItem = ComboThemeDark;
+            }
+            else
+            {
+                CbSettingsTheme.SelectedItem = ComboThemeLight;
+            }
+            _isLoadingSettings = false;
+
+            ApplyTheme(_isDarkTheme);
             LoadProfilesForSelectedGame();
         }
 
@@ -141,9 +271,9 @@ namespace TruckStudio
                 
                 if (_currentSaveContent != null)
                 {
-                    // Debug: export decrypted game.sii to desktop
-                    string exportPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "game_debug.sii");
-                    System.IO.File.WriteAllText(exportPath, _currentSaveContent);
+                    // Debug: export decrypted game.sii to desktop (disabled in v0.2.1-alpha)
+                    // string exportPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "game_debug.sii");
+                    // System.IO.File.WriteAllText(exportPath, _currentSaveContent);
 
                     // Enable the editing panels
                     PanelProfileEdit.IsEnabled = true;
@@ -802,6 +932,11 @@ namespace TruckStudio
             }
 
             TranslateUI();
+
+            if (!_isLoadingSettings)
+            {
+                SaveSettings();
+            }
         }
 
         private void CbSettingsTheme_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -815,6 +950,11 @@ namespace TruckStudio
             else if (CbSettingsTheme.SelectedItem == ComboThemeLight)
             {
                 ApplyTheme(false);
+            }
+
+            if (!_isLoadingSettings)
+            {
+                SaveSettings();
             }
         }
 
@@ -982,7 +1122,7 @@ namespace TruckStudio
                         return;
                     }
 
-                    Version currentVersion = new Version("0.2.0");
+                    Version currentVersion = new Version("0.2.1");
                     if (Version.TryParse(latestVersionStr, out Version latestVersion) && latestVersion > currentVersion)
                     {
                         var answer = ShowLocalizedMessageBox(
