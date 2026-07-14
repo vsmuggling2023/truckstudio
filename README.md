@@ -3,7 +3,7 @@
 ⚠️ **Important Note:** This tool is exclusively designed and developed for Euro Truck Simulator 2 (ETS2) and American Truck Simulator (ATS).
 
 ## Overview / What does this program do?
-**TruckStudio** is a powerful and easy-to-use desktop application designed to modify and enhance your save games in **Euro Truck Simulator 2**. 
+**TruckStudio** is a powerful and easy-to-use desktop application designed to modify and enhance your save games in Euro Truck Simulator 2 and American Truck Simulator. 
 
 Instead of manually editing complex code or struggling with the game's console, TruckStudio provides a modern, clean graphical interface where you can instantly tweak your player profile, manage your truck fleet, and manipulate the game world. Whether you want to quickly add money to your account, magically repair your cargo after a crash, unlock all cities, or give yourself infinite fuel, TruckStudio safely reads your game save, applies the cheats or modifications you select, and saves it back instantly so you can continue playing without interruptions.
 
