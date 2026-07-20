@@ -212,8 +212,8 @@
                 </Grid>
 
                 <!-- Content Pages -->
-                <Grid Grid.Row="1" Margin="40,0,40,40">
-                    
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="40,0,40,40">
+                    <Grid>
                     <!-- Page 1: Profile -->
                     <Grid x:Name="PageProfile" Visibility="Visible">
                         <StackPanel>
@@ -399,11 +399,12 @@
                             </StackPanel>
                         </Border>
                     </Grid>
-                </Grid>
+                    </Grid>
+                </ScrollViewer>
             </Grid>
             
             <!-- Version Number -->
-            <TextBlock Text="v0.2.1-alpha" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,15,15" Foreground="#64748b" FontSize="12" IsHitTestVisible="False" Panel.ZIndex="10"/>
+            <TextBlock Text="v0.2.2-alpha" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,15,15" Foreground="#64748b" FontSize="12" IsHitTestVisible="False" Panel.ZIndex="10"/>
         </Grid>
     </Border>
 </Window>
