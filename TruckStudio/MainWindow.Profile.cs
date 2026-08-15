@@ -86,7 +86,7 @@ namespace TruckStudio
                 
                 if (_currentSaveContent != null)
                 {
-                    // Debug: export decrypted game.sii to desktop (disabled in v0.2.2-alpha)
+                    // Debug: export decrypted game.sii to desktop (disabled in v0.3.0-alpha)
                     // string exportPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "game_debug.sii");
                     // System.IO.File.WriteAllText(exportPath, _currentSaveContent);
 
@@ -102,6 +102,8 @@ namespace TruckStudio
 
                     TxtMoney.Text = SaveParser.ExtractMoney(_currentSaveContent);
                     TxtExperience.Text = SaveParser.ExtractXP(_currentSaveContent);
+                    TxtCargoWeight.Text = SaveParser.ExtractCargoWeight(_currentSaveContent);
+                    TxtDeliveryTime.Text = SaveParser.ExtractDeliveryTime(_currentSaveContent);
 
                     // Enable Freight Market panel
                     PanelFreightEdit.IsEnabled = true;
@@ -144,13 +146,47 @@ namespace TruckStudio
         private void SaveProfileChanges_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrEmpty(_currentSavePath) || string.IsNullOrEmpty(_currentSaveContent)) return;
+            if (WarnIfGameRunning()) return;
 
-            _currentSaveContent = SaveParser.SetMoney(_currentSaveContent, TxtMoney.Text);
-            _currentSaveContent = SaveParser.SetXP(_currentSaveContent, TxtExperience.Text);
-            
+            // Money and XP must be plain positive integers (no separators, no decimals).
+            // Values above the caps overflow the game's money/level math and crash the game when buying a truck.
+            string moneyText = TxtMoney.Text.Trim();
+            string xpText = TxtExperience.Text.Trim();
+
+            if (string.IsNullOrEmpty(moneyText) ||
+                !long.TryParse(moneyText, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out long money) ||
+                money < 0)
+            {
+                ShowLocalizedMessageBox("Please enter a valid amount of money (whole numbers only, no separators).", "¡Por favor, ingresa un monto de dinero válido (solo números enteros, sin separadores)!", "Error", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            const long maxMoney = 2000000000L;
+            if (money > maxMoney)
+            {
+                money = maxMoney;
+            }
+
+            if (string.IsNullOrEmpty(xpText) ||
+                !long.TryParse(xpText, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out long xp) ||
+                xp < 0)
+            {
+                ShowLocalizedMessageBox("Please enter a valid amount of experience (whole numbers only, no separators).", "¡Por favor, ingresa una cantidad de experiencia válida (solo números enteros, sin separadores)!", "Error", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            const long maxXp = 10000000L;
+            if (xp > maxXp)
+            {
+                xp = maxXp;
+            }
+
+            _currentSaveContent = SaveParser.SetMoney(_currentSaveContent, money.ToString());
+            _currentSaveContent = SaveParser.SetXP(_currentSaveContent, xp.ToString());
+
             System.IO.File.WriteAllText(_currentSavePath, _currentSaveContent);
 
-            ShowLocalizedMessageBox($"Successfully saved profile data!\nMoney: {TxtMoney.Text}\nXP: {TxtExperience.Text}", $"¡Datos guardados con éxito!\nDinero: {TxtMoney.Text}\nXP: {TxtExperience.Text}", "Success", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+            ShowLocalizedMessageBox($"Successfully saved profile data!\nMoney: {money:N0}\nXP: {xp:N0}", $"¡Datos guardados con éxito!\nDinero: {money:N0}\nXP: {xp:N0}", "Success", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

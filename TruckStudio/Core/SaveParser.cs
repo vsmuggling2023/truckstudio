@@ -767,5 +767,603 @@ namespace TruckStudio.Core
             return updatedContent;
         }
 
+        public static string SetCargoWeight(string saveContent, string newWeight)
+        {
+            try
+            {
+                double tons = 0;
+                double.TryParse(newWeight.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out tons);
+                int kg = (int)Math.Round(tons * 1000.0);
+                string newWeightKg = kg.ToString();
+
+                // 1. Identify active trailer ID
+                string currentTrailerId = null;
+
+                // A. Check active job trailer first (player_job)
+                var currentJobMatch = Regex.Match(saveContent, @"(?m)^\s*current_job:\s*([_a-zA-Z0-9.]+)");
+                if (currentJobMatch.Success)
+                {
+                    string currentJobId = currentJobMatch.Groups[1].Value.Trim();
+                    if (currentJobId != "null" && !string.IsNullOrEmpty(currentJobId))
+                    {
+                        string jobHeader = $"player_job : {currentJobId}";
+                        int jobIdx = saveContent.IndexOf(jobHeader);
+                        if (jobIdx != -1)
+                        {
+                            int jobOpenBrace = saveContent.IndexOf('{', jobIdx);
+                            if (jobOpenBrace != -1)
+                            {
+                                int jobCloseBrace = FindClosingBrace(saveContent, jobOpenBrace);
+                                if (jobCloseBrace != -1)
+                                {
+                                    string jobBlock = saveContent.Substring(jobIdx, jobCloseBrace - jobIdx + 1);
+                                    var jobTrailerMatch = Regex.Match(jobBlock, @"(?m)^\s*(?:trailer|company_trailer):\s*([_a-zA-Z0-9.]+)");
+                                    if (jobTrailerMatch.Success)
+                                    {
+                                        string tId = jobTrailerMatch.Groups[1].Value.Trim();
+                                        if (tId != "null" && !string.IsNullOrEmpty(tId))
+                                        {
+                                            currentTrailerId = tId;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // B. Fallback: player block's assigned_trailer (attached/owned trailer)
+                if (string.IsNullOrEmpty(currentTrailerId))
+                {
+                    var playerMatch = Regex.Match(saveContent, @"(?m)^\s*player\s*:\s*[_a-zA-Z0-9.]+\s*\{");
+                    if (playerMatch.Success)
+                    {
+                        int playerOpenBrace = saveContent.IndexOf('{', playerMatch.Index);
+                        if (playerOpenBrace != -1)
+                        {
+                            int playerCloseBrace = FindClosingBrace(saveContent, playerOpenBrace);
+                            if (playerCloseBrace != -1)
+                            {
+                                string playerBlock = saveContent.Substring(playerMatch.Index, playerCloseBrace - playerMatch.Index + 1);
+                                var assignedTrailerMatch = Regex.Match(playerBlock, @"(?m)^\s*assigned_trailer:\s*([_a-zA-Z0-9.]+)");
+                                if (assignedTrailerMatch.Success)
+                                {
+                                    string tId = assignedTrailerMatch.Groups[1].Value.Trim();
+                                    if (tId != "null" && !string.IsNullOrEmpty(tId))
+                                    {
+                                        currentTrailerId = tId;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // C. Fallback to assigned_vehicles (owned trailer)
+                if (string.IsNullOrEmpty(currentTrailerId))
+                {
+                    var assignedMatch = Regex.Match(saveContent, @"(?m)^\s*assigned_vehicles:\s*([_a-zA-Z0-9.]+)");
+                    if (assignedMatch.Success)
+                    {
+                        string assignedVehicle = assignedMatch.Groups[1].Value.Trim();
+                        if (assignedVehicle != "null")
+                        {
+                            string pvHeader = $"player_vehicles : {assignedVehicle}";
+                            int pvIdx = saveContent.IndexOf(pvHeader);
+                            if (pvIdx != -1)
+                            {
+                                int pvOpenBrace = saveContent.IndexOf('{', pvIdx);
+                                if (pvOpenBrace != -1)
+                                {
+                                    int pvCloseBrace = FindClosingBrace(saveContent, pvOpenBrace);
+                                    if (pvCloseBrace != -1)
+                                    {
+                                        string pvBlock = saveContent.Substring(pvIdx, pvCloseBrace - pvIdx + 1);
+                                        var trailerMatch = Regex.Match(pvBlock, @"(?m)^\s*trailer:\s*([_a-zA-Z0-9.]+)");
+                                        if (trailerMatch.Success)
+                                        {
+                                            string tId = trailerMatch.Groups[1].Value.Trim();
+                                            if (tId != "null" && !string.IsNullOrEmpty(tId))
+                                            {
+                                                currentTrailerId = tId;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                string updatedContent = saveContent;
+
+                // 2. Read the current (original) cargo mass in kg from the active trailer
+                double originalCargoMassKg = 0;
+                if (!string.IsNullOrEmpty(currentTrailerId))
+                {
+                    string trailerHeader = $"trailer : {currentTrailerId}";
+                    int trailerIdx = updatedContent.IndexOf(trailerHeader);
+                    if (trailerIdx != -1)
+                    {
+                        int trailerOpenBrace = updatedContent.IndexOf('{', trailerIdx);
+                        if (trailerOpenBrace != -1)
+                        {
+                            int trailerCloseBrace = FindClosingBrace(updatedContent, trailerOpenBrace);
+                            if (trailerCloseBrace != -1)
+                            {
+                                string trailerBlock = updatedContent.Substring(trailerIdx, trailerCloseBrace - trailerIdx + 1);
+                                var massMatch = Regex.Match(trailerBlock, @"(?m)^\s*cargo_mass:\s*([0-9.]+|&[0-9a-fA-F]{8})");
+                                if (massMatch.Success && TryParseSiiFloat(massMatch.Groups[1].Value, out originalCargoMassKg) && originalCargoMassKg > 0)
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 3. If a trailer ID is found, update its cargo_mass (and any slaves)
+                if (!string.IsNullOrEmpty(currentTrailerId))
+                {
+                    var trailerIds = new System.Collections.Generic.List<string>();
+                    trailerIds.Add(currentTrailerId);
+
+                    string traceTrailerId = currentTrailerId;
+                    int counter = 0;
+                    while (counter < 20)
+                    {
+                        counter++;
+                        string trailerHeader = $"trailer : {traceTrailerId}";
+                        int trailerIdx = updatedContent.IndexOf(trailerHeader);
+                        if (trailerIdx == -1) break;
+
+                        int trailerOpenBrace = updatedContent.IndexOf('{', trailerIdx);
+                        if (trailerOpenBrace == -1) break;
+
+                        int trailerCloseBrace = FindClosingBrace(updatedContent, trailerOpenBrace);
+                        if (trailerCloseBrace == -1) break;
+
+                        string trailerBlock = updatedContent.Substring(trailerIdx, trailerCloseBrace - trailerIdx + 1);
+
+                        // Find slave trailer if any
+                        var slaveMatch = Regex.Match(trailerBlock, @"(?m)^\s*(?:slave|slave_trailer):\s*([_a-zA-Z0-9.]+)");
+                        if (slaveMatch.Success)
+                        {
+                            string slaveId = slaveMatch.Groups[1].Value.Trim();
+                            if (slaveId != "null" && !string.IsNullOrEmpty(slaveId))
+                            {
+                                trailerIds.Add(slaveId);
+                                traceTrailerId = slaveId;
+                                continue;
+                            }
+                        }
+                        break;
+                    }
+
+                    // Replace cargo_mass for each found trailer in the content
+                    foreach (var trailerId in trailerIds)
+                    {
+                        string trailerHeader = $"trailer : {trailerId}";
+                        int trailerIdx = updatedContent.IndexOf(trailerHeader);
+                        if (trailerIdx == -1) continue;
+
+                        int trailerOpenBrace = updatedContent.IndexOf('{', trailerIdx);
+                        if (trailerOpenBrace == -1) continue;
+
+                        int trailerCloseBrace = FindClosingBrace(updatedContent, trailerOpenBrace);
+                        if (trailerCloseBrace == -1) continue;
+
+                        string trailerBlock = updatedContent.Substring(trailerIdx, trailerCloseBrace - trailerIdx + 1);
+
+                        // Replace cargo_mass line inside this trailer block
+                        string newTrailerBlock = Regex.Replace(trailerBlock, @"(?m)^(\s*cargo_mass:\s*)[^\r\n]*", $"$1 {newWeightKg}");
+
+                        // Reconstruct content
+                        string prefix = updatedContent.Substring(0, trailerIdx);
+                        string suffix = updatedContent.Substring(trailerCloseBrace + 1);
+                        updatedContent = prefix + newTrailerBlock + suffix;
+                    }
+                }
+
+                // 4. Scale units_count in player_job so the game recomputes the displayed cargo mass
+                if (currentJobMatch.Success && originalCargoMassKg > 0)
+                {
+                    string currentJobId = currentJobMatch.Groups[1].Value.Trim();
+                    if (currentJobId != "null" && !string.IsNullOrEmpty(currentJobId))
+                    {
+                        string jobHeader = $"player_job : {currentJobId}";
+                        int jobIdx = updatedContent.IndexOf(jobHeader);
+                        if (jobIdx != -1)
+                        {
+                            int jobOpenBrace = updatedContent.IndexOf('{', jobIdx);
+                            if (jobOpenBrace != -1)
+                            {
+                                int jobCloseBrace = FindClosingBrace(updatedContent, jobOpenBrace);
+                                if (jobCloseBrace != -1)
+                                {
+                                    string jobBlock = updatedContent.Substring(jobIdx, jobCloseBrace - jobIdx + 1);
+                                    var unitsMatch = Regex.Match(jobBlock, @"(?m)^\s*units_count:\s*(\d+)");
+                                    if (unitsMatch.Success)
+                                    {
+                                        int currentUnits = int.Parse(unitsMatch.Groups[1].Value);
+                                        if (currentUnits > 0)
+                                        {
+                                            int newUnits = (int)Math.Round(kg * currentUnits / originalCargoMassKg);
+                                            if (newUnits < 1) newUnits = 1;
+
+                                            string newJobBlock = Regex.Replace(jobBlock, @"(?m)^(\s*units_count:)[^\r\n]*", $"$1 {newUnits}");
+                                            string prefix = updatedContent.Substring(0, jobIdx);
+                                            string suffix = updatedContent.Substring(jobCloseBrace + 1);
+                                            updatedContent = prefix + newJobBlock + suffix;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return updatedContent;
+            }
+            catch
+            {
+                return saveContent;
+            }
+        }
+
+        private static bool TryParseSiiFloat(string token, out double value)
+        {
+            token = token.Trim();
+            if (token.StartsWith("&"))
+            {
+                uint bits;
+                if (token.Length == 9 && uint.TryParse(token.Substring(1), System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out bits))
+                {
+                    value = BitConverter.ToSingle(BitConverter.GetBytes(bits), 0);
+                    return true;
+                }
+                value = 0;
+                return false;
+            }
+            return double.TryParse(token.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out value);
+        }
+
+        public static string ExtractCargoWeight(string saveContent)
+        {
+            try
+            {
+                // 1. Try to read from player_job of current_job first (game UI weight)
+                var currentJobMatch = Regex.Match(saveContent, @"(?m)^\s*current_job:\s*([_a-zA-Z0-9.]+)");
+                if (currentJobMatch.Success)
+                {
+                    string currentJobId = currentJobMatch.Groups[1].Value.Trim();
+                    if (currentJobId != "null" && !string.IsNullOrEmpty(currentJobId))
+                    {
+                        string jobHeader = $"player_job : {currentJobId}";
+                        int jobIdx = saveContent.IndexOf(jobHeader);
+                        if (jobIdx != -1)
+                        {
+                            int jobOpenBrace = saveContent.IndexOf('{', jobIdx);
+                            if (jobOpenBrace != -1)
+                            {
+                                int jobCloseBrace = FindClosingBrace(saveContent, jobOpenBrace);
+                                if (jobCloseBrace != -1)
+                                {
+                                    string jobBlock = saveContent.Substring(jobIdx, jobCloseBrace - jobIdx + 1);
+                                    var massMatch = Regex.Match(jobBlock, @"(?m)^\s*cargo_mass:\s*([0-9.]+|&[0-9a-fA-F]{8})");
+                                    if (massMatch.Success)
+                                    {
+                                        if (TryParseSiiFloat(massMatch.Groups[1].Value, out double kg))
+                                        {
+                                            return (kg / 1000.0).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 2. Fallback to active trailer cargo_mass
+                string currentTrailerId = null;
+                if (currentJobMatch.Success)
+                {
+                    string currentJobId = currentJobMatch.Groups[1].Value.Trim();
+                    if (currentJobId != "null" && !string.IsNullOrEmpty(currentJobId))
+                    {
+                        string jobHeader = $"player_job : {currentJobId}";
+                        int jobIdx = saveContent.IndexOf(jobHeader);
+                        if (jobIdx != -1)
+                        {
+                            int jobOpenBrace = saveContent.IndexOf('{', jobIdx);
+                            if (jobOpenBrace != -1)
+                            {
+                                int jobCloseBrace = FindClosingBrace(saveContent, jobOpenBrace);
+                                if (jobCloseBrace != -1)
+                                {
+                                    string jobBlock = saveContent.Substring(jobIdx, jobCloseBrace - jobIdx + 1);
+                                    var jobTrailerMatch = Regex.Match(jobBlock, @"(?m)^\s*(?:trailer|company_trailer):\s*([_a-zA-Z0-9.]+)");
+                                    if (jobTrailerMatch.Success)
+                                    {
+                                        string tId = jobTrailerMatch.Groups[1].Value.Trim();
+                                        if (tId != "null" && !string.IsNullOrEmpty(tId))
+                                        {
+                                            currentTrailerId = tId;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (string.IsNullOrEmpty(currentTrailerId))
+                {
+                    var playerMatch = Regex.Match(saveContent, @"(?m)^\s*player\s*:\s*[_a-zA-Z0-9.]+\s*\{");
+                    if (playerMatch.Success)
+                    {
+                        int playerOpenBrace = saveContent.IndexOf('{', playerMatch.Index);
+                        if (playerOpenBrace != -1)
+                        {
+                            int playerCloseBrace = FindClosingBrace(saveContent, playerOpenBrace);
+                            if (playerCloseBrace != -1)
+                            {
+                                string playerBlock = saveContent.Substring(playerMatch.Index, playerCloseBrace - playerMatch.Index + 1);
+                                var assignedTrailerMatch = Regex.Match(playerBlock, @"(?m)^\s*assigned_trailer:\s*([_a-zA-Z0-9.]+)");
+                                if (assignedTrailerMatch.Success)
+                                {
+                                    string tId = assignedTrailerMatch.Groups[1].Value.Trim();
+                                    if (tId != "null" && !string.IsNullOrEmpty(tId))
+                                    {
+                                        currentTrailerId = tId;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (string.IsNullOrEmpty(currentTrailerId))
+                {
+                    var assignedMatch = Regex.Match(saveContent, @"(?m)^\s*assigned_vehicles:\s*([_a-zA-Z0-9.]+)");
+                    if (assignedMatch.Success)
+                    {
+                        string assignedVehicle = assignedMatch.Groups[1].Value.Trim();
+                        if (assignedVehicle != "null")
+                        {
+                            string pvHeader = $"player_vehicles : {assignedVehicle}";
+                            int pvIdx = saveContent.IndexOf(pvHeader);
+                            if (pvIdx != -1)
+                            {
+                                int pvOpenBrace = saveContent.IndexOf('{', pvIdx);
+                                if (pvOpenBrace != -1)
+                                {
+                                    int pvCloseBrace = FindClosingBrace(saveContent, pvOpenBrace);
+                                    if (pvCloseBrace != -1)
+                                    {
+                                        string pvBlock = saveContent.Substring(pvIdx, pvCloseBrace - pvIdx + 1);
+                                        var trailerMatch = Regex.Match(pvBlock, @"(?m)^\s*trailer:\s*([_a-zA-Z0-9.]+)");
+                                        if (trailerMatch.Success)
+                                        {
+                                            string tId = trailerMatch.Groups[1].Value.Trim();
+                                            if (tId != "null" && !string.IsNullOrEmpty(tId))
+                                            {
+                                                currentTrailerId = tId;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(currentTrailerId))
+                {
+                    string trailerHeader = $"trailer : {currentTrailerId}";
+                    int trailerIdx = saveContent.IndexOf(trailerHeader);
+                    if (trailerIdx != -1)
+                    {
+                        int trailerOpenBrace = saveContent.IndexOf('{', trailerIdx);
+                        if (trailerOpenBrace != -1)
+                        {
+                            int trailerCloseBrace = FindClosingBrace(saveContent, trailerOpenBrace);
+                            if (trailerCloseBrace != -1)
+                            {
+                                string trailerBlock = saveContent.Substring(trailerIdx, trailerCloseBrace - trailerIdx + 1);
+                                var trailerMassMatch = Regex.Match(trailerBlock, @"(?m)^\s*cargo_mass:\s*([0-9.]+|&[0-9a-fA-F]{8})");
+                                if (trailerMassMatch.Success)
+                                {
+                                    if (TryParseSiiFloat(trailerMassMatch.Groups[1].Value, out double kg))
+                                    {
+                                        return (kg / 1000.0).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            return "0";
+        }
+
+        public static string ExtractDeliveryTime(string saveContent)
+        {
+            try
+            {
+                // 1. Get game_time from the economy block
+                uint gameTime = 0;
+                int economyIdx = saveContent.IndexOf("economy :");
+                if (economyIdx != -1)
+                {
+                    int openBrace = saveContent.IndexOf('{', economyIdx);
+                    if (openBrace != -1)
+                    {
+                        int ecoBraceCount = 1;
+                        int ecoCloseBrace = -1;
+                        for (int ecoI = openBrace + 1; ecoI < saveContent.Length; ecoI++)
+                        {
+                            if (saveContent[ecoI] == '{') ecoBraceCount++;
+                            else if (saveContent[ecoI] == '}')
+                            {
+                                ecoBraceCount--;
+                                if (ecoBraceCount == 0)
+                                {
+                                    ecoCloseBrace = ecoI;
+                                    break;
+                                }
+                            }
+                        }
+                        if (ecoCloseBrace != -1)
+                        {
+                            string economyContent = saveContent.Substring(openBrace, ecoCloseBrace - openBrace + 1);
+                            var match = Regex.Match(economyContent, @"(?m)^\s*game_time:\s*(\d+)");
+                            if (match.Success)
+                            {
+                                uint.TryParse(match.Groups[1].Value, out gameTime);
+                            }
+                        }
+                    }
+                }
+
+                // 2. Get current_job
+                var currentJobMatch = Regex.Match(saveContent, @"(?m)^\s*current_job:\s*([_a-zA-Z0-9.]+)");
+                if (currentJobMatch.Success)
+                {
+                    string currentJobId = currentJobMatch.Groups[1].Value.Trim();
+                    if (currentJobId != "null" && !string.IsNullOrEmpty(currentJobId))
+                    {
+                        string jobHeader = $"player_job : {currentJobId}";
+                        int jobIdx = saveContent.IndexOf(jobHeader);
+                        if (jobIdx != -1)
+                        {
+                            int jobOpenBrace = saveContent.IndexOf('{', jobIdx);
+                            if (jobOpenBrace != -1)
+                            {
+                                int jobCloseBrace = FindClosingBrace(saveContent, jobOpenBrace);
+                                if (jobCloseBrace != -1)
+                                {
+                                    string jobBlock = saveContent.Substring(jobIdx, jobCloseBrace - jobIdx + 1);
+                                    var limitMatch = Regex.Match(jobBlock, @"(?m)^\s*time_upper_limit:\s*(\d+)");
+                                    if (limitMatch.Success)
+                                    {
+                                        if (uint.TryParse(limitMatch.Groups[1].Value, out uint timeUpperLimit))
+                                        {
+                                            double remainingMinutes = (double)timeUpperLimit - (double)gameTime;
+                                            double remainingHours = remainingMinutes / 60.0;
+                                            return remainingHours.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            return "0";
+        }
+
+        public static string SetDeliveryTime(string saveContent, string offsetHoursStr)
+        {
+            try
+            {
+                double offsetHours = 0;
+                double.TryParse(offsetHoursStr.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out offsetHours);
+                
+                // 1. Get game_time from the economy block
+                uint gameTime = 0;
+                int economyIdx = saveContent.IndexOf("economy :");
+                if (economyIdx != -1)
+                {
+                    int openBrace = saveContent.IndexOf('{', economyIdx);
+                    if (openBrace != -1)
+                    {
+                        int ecoBraceCount = 1;
+                        int ecoCloseBrace = -1;
+                        for (int ecoI = openBrace + 1; ecoI < saveContent.Length; ecoI++)
+                        {
+                            if (saveContent[ecoI] == '{') ecoBraceCount++;
+                            else if (saveContent[ecoI] == '}')
+                            {
+                                ecoBraceCount--;
+                                if (ecoBraceCount == 0)
+                                {
+                                    ecoCloseBrace = ecoI;
+                                    break;
+                                }
+                            }
+                        }
+                        if (ecoCloseBrace != -1)
+                        {
+                            string economyContent = saveContent.Substring(openBrace, ecoCloseBrace - openBrace + 1);
+                            var match = Regex.Match(economyContent, @"(?m)^\s*game_time:\s*(\d+)");
+                            if (match.Success)
+                            {
+                                uint.TryParse(match.Groups[1].Value, out gameTime);
+                            }
+                        }
+                    }
+                }
+
+                // Calculate limits
+                int offsetMinutes = (int)Math.Round(offsetHours * 60.0);
+                long upperLimitVal = (long)gameTime + offsetMinutes;
+                if (upperLimitVal < 0) upperLimitVal = 0;
+                uint newTimeUpperLimit = (uint)upperLimitVal;
+
+                uint newTimeLowerLimit = newTimeUpperLimit > 360 ? newTimeUpperLimit - 360 : 0;
+
+                // 2. Find current_job and update player_job block
+                var currentJobMatch = Regex.Match(saveContent, @"(?m)^\s*current_job:\s*([_a-zA-Z0-9.]+)");
+                if (currentJobMatch.Success)
+                {
+                    string currentJobId = currentJobMatch.Groups[1].Value.Trim();
+                    if (currentJobId != "null" && !string.IsNullOrEmpty(currentJobId))
+                    {
+                        string jobHeader = $"player_job : {currentJobId}";
+                        int jobIdx = saveContent.IndexOf(jobHeader);
+                        if (jobIdx != -1)
+                        {
+                            int jobOpenBrace = saveContent.IndexOf('{', jobIdx);
+                            if (jobOpenBrace != -1)
+                            {
+                                int jobCloseBrace = FindClosingBrace(saveContent, jobOpenBrace);
+                                if (jobCloseBrace != -1)
+                                {
+                                    string jobBlock = saveContent.Substring(jobIdx, jobCloseBrace - jobIdx + 1);
+                                    
+                                    string newJobBlock = jobBlock;
+                                    newJobBlock = Regex.Replace(newJobBlock, @"(?m)^(\s*time_upper_limit:\s*)[^\r\n]*", $"$1 {newTimeUpperLimit}");
+                                    newJobBlock = Regex.Replace(newJobBlock, @"(?m)^(\s*time_lower_limit:\s*)[^\r\n]*", $"$1 {newTimeLowerLimit}");
+
+                                    string prefix = saveContent.Substring(0, jobIdx);
+                                    string suffix = saveContent.Substring(jobCloseBrace + 1);
+                                    return prefix + newJobBlock + suffix;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            return saveContent;
+        }
+
+        private static int FindClosingBrace(string content, int openBraceIdx)
+        {
+            int braceCount = 1;
+            for (int i = openBraceIdx + 1; i < content.Length; i++)
+            {
+                if (content[i] == '{') braceCount++;
+                else if (content[i] == '}')
+                {
+                    braceCount--;
+                    if (braceCount == 0) return i;
+                }
+            }
+            return -1;
+        }
+
     }
 }

@@ -148,5 +148,59 @@ namespace TruckStudio
 
             ShowLocalizedMessageBox($"Truck teleported to coordinates: X:{x}, Y:{y}, Z:{z}!", $"¡Camión teletransportado a las coordenadas X:{x}, Y:{y}, Z:{z}!", "Success", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
         }
+
+        private void SaveCargoWeight_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(_currentSavePath) || string.IsNullOrEmpty(_currentSaveContent)) return;
+
+            string weight = TxtCargoWeight.Text.Trim();
+            if (string.IsNullOrEmpty(weight) || !double.TryParse(weight.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double _))
+            {
+                ShowLocalizedMessageBox("Please enter a valid weight in tons (numbers only).", "¡Por favor, ingresa un peso válido en toneladas (solo números)!", "Error", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                _currentSaveContent = SaveParser.SetCargoWeight(_currentSaveContent, weight);
+                System.IO.File.WriteAllText(_currentSavePath, _currentSaveContent);
+
+                ShowLocalizedMessageBox("Active cargo weight has been updated successfully!", "¡El peso de la carga activa ha sido actualizado con éxito!", "Success", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to update cargo weight: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void SaveDeliveryTime_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(_currentSavePath) || string.IsNullOrEmpty(_currentSaveContent)) return;
+
+            string timeStr = TxtDeliveryTime.Text.Trim();
+            if (string.IsNullOrEmpty(timeStr) || !double.TryParse(timeStr.Replace(',', '.'), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double hours))
+            {
+                ShowLocalizedMessageBox("Please enter a valid time in hours (numbers only).", "¡Por favor, ingresa un tiempo válido en horas (solo números)!", "Error", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (hours < 0)
+            {
+                ShowLocalizedMessageBox("Only positive numbers or zero are allowed.", "¡Solo se permiten números positivos o cero!", "Error", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                _currentSaveContent = SaveParser.SetDeliveryTime(_currentSaveContent, timeStr);
+                System.IO.File.WriteAllText(_currentSavePath, _currentSaveContent);
+
+                ShowLocalizedMessageBox("Remaining delivery time has been updated successfully!", "¡El tiempo restante para la entrega ha sido actualizado con éxito!", "Success", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to update delivery time: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 }

@@ -301,6 +301,16 @@ namespace TruckStudio
             BtnRefuel.Content = isEs ? "Rellena Combustible (100%)" : "Refill Fuel (100%)";
             TxtFixCargoDesc.Text = isEs ? "Elimina el daño de tu carga activa al 0%." : "Fix the cargo damage of your active delivery back to 0%.";
             BtnFixCargo.Content = isEs ? "Reparar Carga (0%)" : "Fix Cargo Damage (0%)";
+            TxtCargoWeightLabel.Text = isEs ? "Peso de la Carga (Toneladas)" : "Cargo Weight (Tons)";
+            TxtCargoWeightDesc.Text = isEs 
+                ? "Modifica el peso de tu carga activa. Configúralo en 0 para un viaje sin peso, o auméntalo para un desafío."
+                : "Modify the weight of your active cargo. Set it to 0 for a weightless delivery, or make it heavier for a challenge.";
+            BtnSaveCargoWeight.Content = isEs ? "Actualizar Peso" : "Update Weight";
+            TxtDeliveryTimeLabel.Text = isEs ? "Tiempo Restante para la Entrega (Horas)" : "Remaining Delivery Time (Hours)";
+            TxtDeliveryTimeDesc.Text = isEs 
+                ? "Modifica el tiempo restante para la entrega activa. No se permiten valores negativos; solo números positivos."
+                : "Modify the remaining time for the active delivery. Negative values are not allowed; only positive numbers are accepted.";
+            BtnSaveDeliveryTime.Content = isEs ? "Actualizar Tiempo" : "Update Time";
             TxtTeleportHeader.Text = isEs ? "Teletransporte (Cámara 0)" : "Teleport (Camera 0)";
             TxtTeleportReqHeader.Text = isEs ? "Requisito: ¡Cámara 0 no activada!" : "Requirement: Camera 0 not enabled!";
             TxtTeleportReqDesc.Text = isEs 
@@ -359,6 +369,38 @@ namespace TruckStudio
             string message = _currentLanguage == "es" ? esMessage : enMessage;
             string title = _currentLanguage == "es" ? esTitle : enTitle;
             return MessageBox.Show(message, title, buttons, image);
+        }
+
+        private static bool IsGameRunning()
+        {
+            string[] processNames = { "eurotrucks2", "ets2", "amtrucks", "truckersmp", "bin_x64" };
+            foreach (string name in processNames)
+            {
+                try
+                {
+                    if (System.Diagnostics.Process.GetProcessesByName(name).Length > 0)
+                        return true;
+                }
+                catch { }
+            }
+            return false;
+        }
+
+        private bool WarnIfGameRunning()
+        {
+            if (!IsGameRunning()) return false;
+            MessageBoxResult result = ShowLocalizedMessageBox(
+                "WARNING: Euro Truck Simulator 2 (or TruckersMP) is currently running.\n\n" +
+                "The game auto-saves constantly and will OVERWRITE your edits with its old state.\n" +
+                "Your changes will be lost unless you close the game completely first.\n\n" +
+                "Do you want to continue anyway?",
+                "¡ADVERTENCIA! Euro Truck Simulator 2 (o TruckersMP) está en ejecución.\n\n" +
+                "El juego autoguarda constantemente y SOBRESCRIBIRÁ tus cambios con su estado anterior.\n" +
+                "Perderás las modificaciones a menos que cierres el juego por completo primero.\n\n" +
+                "¿Deseas continuar de todas formas?",
+                "Game is running", "El juego está en ejecución",
+                MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            return result != MessageBoxResult.Yes;
         }
     }
 }

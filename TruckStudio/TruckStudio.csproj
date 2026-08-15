@@ -19,10 +19,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TruckStudioUpdater\TruckStudioUpdater.csproj" />
+    <EmbeddedResource Include="TruckStudioUpdater.exe" Link="Resources\TruckStudioUpdater.exe" />
   </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="..\TruckStudioUpdater\bin\$(Configuration)\net472\TruckStudioUpdater.exe" Link="Resources\TruckStudioUpdater.exe" />
-  </ItemGroup>
+  <Target Name="BuildUpdater" BeforeTargets="BeforeBuild">
+    <MSBuild Projects="$(MSBuildProjectDirectory)\..\TruckStudioUpdater\TruckStudioUpdater.csproj"
+             Targets="Build"
+             Properties="Configuration=$(Configuration)" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\..\TruckStudioUpdater\bin\$(Configuration)\net472\TruckStudioUpdater.exe"
+          DestinationFolder="$(MSBuildProjectDirectory)"
+          SkipUnchangedFiles="true" />
+  </Target>
 </Project>

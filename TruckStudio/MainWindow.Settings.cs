@@ -79,7 +79,7 @@ namespace TruckStudio
                         return;
                     }
 
-                    Version currentVersion = new Version("0.2.2");
+                    Version currentVersion = new Version("0.3.0");
                     if (Version.TryParse(latestVersionStr, out Version latestVersion) && latestVersion > currentVersion)
                     {
                         var answer = ShowLocalizedMessageBox(
