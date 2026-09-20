@@ -202,5 +202,158 @@ namespace TruckStudio
                 MessageBox.Show($"Failed to update delivery time: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private static readonly string[] PlateColorChoices = new string[]
+        {
+            "FFFFFF", "111111", "BF2222", "F6C700", "1546A0",
+            "177245", "E87722", "D9D9D9", "6B21A8", "0E7490"
+        };
+
+        public void PopulatePlateColorCombos()
+        {
+            PopulatePlateColorCombo(CbPlateBgColor);
+            PopulatePlateColorCombo(CbPlateTextColor);
+
+            // Same defaults as the reference tool: red plate, white text
+            TxtLicensePlate.Text = "T-TOOLS";
+            CbPlateBgColor.Text = "BF2222";
+            CbPlateTextColor.Text = "FFFFFF";
+            ChkPlateColoredMargin.IsChecked = false;
+            ChkPlateApplyTrailer.IsChecked = false;
+            UpdatePlatePreview();
+        }
+
+        private void PopulatePlateColorCombo(System.Windows.Controls.ComboBox combo)
+        {
+            foreach (string hex in PlateColorChoices)
+            {
+                var item = new System.Windows.Controls.ComboBoxItem { Tag = hex };
+                var row = new System.Windows.Controls.StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
+                var swatch = new System.Windows.Shapes.Rectangle
+                {
+                    Width = 14,
+                    Height = 14,
+                    RadiusX = 2,
+                    RadiusY = 2,
+                    Fill = BrushFromHex(hex),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(0, 0, 8, 0)
+                };
+                var label = new System.Windows.Controls.TextBlock { Text = hex, VerticalAlignment = VerticalAlignment.Center };
+                row.Children.Add(swatch);
+                row.Children.Add(label);
+                item.Content = row;
+                combo.Items.Add(item);
+            }
+        }
+
+        // Accepts "RRGGBB" or "#RRGGBB" (also AARRGGBB, last 6 chars win); falls back when invalid.
+        private static string NormalizeHexColor(string input, string fallback)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return fallback;
+            string hex = input.Trim().TrimStart('#');
+            if (hex.Length == 8) hex = hex.Substring(2);
+            if (hex.Length != 6) return fallback;
+            foreach (char c in hex)
+            {
+                if (!Uri.IsHexDigit(c)) return fallback;
+            }
+            return hex.ToUpperInvariant();
+        }
+
+        private static System.Windows.Media.SolidColorBrush BrushFromHex(string hex)
+        {
+            var color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#" + NormalizeHexColor(hex, "000000"));
+            return new System.Windows.Media.SolidColorBrush(color);
+        }
+
+        private void UpdatePlatePreview()
+        {
+            try
+            {
+                string bg = NormalizeHexColor(ReadPlateColorInput(CbPlateBgColor), "FFFFFF");
+                string tx = NormalizeHexColor(ReadPlateColorInput(CbPlateTextColor), "111111");
+
+                PlatePreviewBorder.Background = BrushFromHex(bg);
+                PlatePreviewBorder.BorderBrush = ChkPlateColoredMargin.IsChecked == true ? BrushFromHex(tx) : System.Windows.Media.Brushes.Transparent;
+                PlatePreviewText.Foreground = BrushFromHex(tx);
+
+                string text = TxtLicensePlate.Text.Trim();
+                PlatePreviewText.Text = string.IsNullOrEmpty(text) ? " " : text;
+            }
+            catch { }
+        }
+
+        private static string ReadPlateColorInput(System.Windows.Controls.ComboBox combo)
+        {
+            if (!string.IsNullOrWhiteSpace(combo.Text)) return combo.Text;
+            return (combo.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string;
+        }
+
+        private void LicensePlate_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            UpdatePlatePreview();
+        }
+
+        private void PlateColor_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            UpdatePlatePreview();
+        }
+
+        private void PlateOptions_Changed(object sender, RoutedEventArgs e)
+        {
+            UpdatePlatePreview();
+        }
+
+        private void SaveLicensePlate_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(_currentSavePath) || string.IsNullOrEmpty(_currentSaveContent)) return;
+
+            // Characters that would break the SII markup
+            string text = TxtLicensePlate.Text.Trim().Replace("\"", "").Replace("|", "").ToUpperInvariant();
+            if (string.IsNullOrEmpty(text))
+            {
+                ShowLocalizedMessageBox("Please enter a text for the plate.", "Por favor, ingresa un texto para la matrícula.", "Error", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string bg = NormalizeHexColor(ReadPlateColorInput(CbPlateBgColor), "FFFFFF");
+            string tx = NormalizeHexColor(ReadPlateColorInput(CbPlateTextColor), "111111");
+            bool colorMargin = ChkPlateColoredMargin.IsChecked == true;
+            bool applyTrailer = ChkPlateApplyTrailer.IsChecked == true;
+
+            if (SaveParser.ExtractLicensePlate(_currentSaveContent) == null)
+            {
+                ShowLocalizedMessageBox("Could not find a license plate accessory on the current truck in this save (modded truck?).",
+                    "No se encontró un accesorio de matrícula en el camión actual de esta partida (¿camión modificado?).",
+                    "Error", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                string updated = SaveParser.SetLicensePlate(_currentSaveContent, text, bg, tx, colorMargin, applyTrailer, out bool trailerApplied);
+                if (updated == null)
+                {
+                    ShowLocalizedMessageBox("Could not find a license plate accessory on the current truck in this save (modded truck?).",
+                        "No se encontró un accesorio de matrícula en el camión actual de esta partida (¿camión modificado?).",
+                        "Error", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                _currentSaveContent = updated;
+                System.IO.File.WriteAllText(_currentSavePath, _currentSaveContent);
+
+                string extraEn = (applyTrailer && !trailerApplied) ? "\n\nNo attached trailer with a plate was found, so only the truck was updated." : "";
+                string extraEs = (applyTrailer && !trailerApplied) ? "\n\nNo se encontró remolque acoplado con matrícula, así que solo se actualizó el camión." : "";
+                ShowLocalizedMessageBox("License plate updated successfully!" + extraEn,
+                    "¡Matrícula actualizada con éxito!" + extraEs,
+                    "Success", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to update license plate: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 }

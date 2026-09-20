@@ -46,72 +46,126 @@ namespace TruckStudio
             }
         }
 
+        private const string CurrentAppVersion = "0.3.1";
+
+        private UpdateInfo _latestUpdateInfo;
+
+        private class UpdateInfo
+        {
+            public string LatestVersion;
+            public string DownloadUrl;
+            public string ChangelogEn;
+            public string ChangelogEs;
+        }
+
+        private static async System.Threading.Tasks.Task<UpdateInfo> FetchUpdateInfoAsync()
+        {
+            using (var webClient = new System.Net.WebClient())
+            {
+                webClient.CachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
+                webClient.Encoding = System.Text.Encoding.UTF8;
+                string json = await webClient.DownloadStringTaskAsync(new Uri("https://truckstudio.online/version.json"));
+
+                string changelog = ExtractJsonValue(json, "changelog");
+                var info = new UpdateInfo
+                {
+                    LatestVersion = ExtractJsonValue(json, "version"),
+                    DownloadUrl = ExtractJsonValue(json, "url"),
+                    ChangelogEn = FirstNonEmpty(ExtractJsonValue(json, "changelog_en"), changelog),
+                    ChangelogEs = FirstNonEmpty(ExtractJsonValue(json, "changelog_es"), changelog)
+                };
+                if (info.ChangelogEn != null) info.ChangelogEn = info.ChangelogEn.Replace("\\n", "\n");
+                if (info.ChangelogEs != null) info.ChangelogEs = info.ChangelogEs.Replace("\\n", "\n");
+                return info;
+            }
+        }
+
+        private static string FirstNonEmpty(string a, string b)
+        {
+            return string.IsNullOrEmpty(a) ? b : a;
+        }
+
+        /// <summary>
+        /// Silent startup check: shows the navbar alert pill when a newer version exists.
+        /// Never bothers the user (offline, server down, parse issues are all ignored).
+        /// </summary>
+        private async void CheckForUpdatesSilently()
+        {
+            try
+            {
+                UpdateInfo info = await FetchUpdateInfoAsync();
+                if (info == null || string.IsNullOrEmpty(info.LatestVersion) || string.IsNullOrEmpty(info.DownloadUrl)) return;
+
+                if (Version.TryParse(info.LatestVersion, out Version latest) && latest > new Version(CurrentAppVersion))
+                {
+                    _latestUpdateInfo = info;
+                    BtnUpdateBadge.Visibility = Visibility.Visible;
+                    TxtUpdateBadge.Text = _currentLanguage == "es" ? "Actualización" : "Update";
+                }
+            }
+            catch { }
+        }
+
+        private void UpdateBadge_Click(object sender, RoutedEventArgs e)
+        {
+            NavSettings_Click(sender, e);
+            CheckUpdates_Click(sender, e);
+        }
+
         private async void CheckUpdates_Click(object sender, RoutedEventArgs e)
         {
             BtnCheckUpdates.IsEnabled = false;
-            
+
             try
             {
-                using (var webClient = new System.Net.WebClient())
+                UpdateInfo info = await FetchUpdateInfoAsync();
+
+                string latestVersionStr = info.LatestVersion;
+                string downloadUrl = info.DownloadUrl;
+                string changelog = _currentLanguage == "es" ? info.ChangelogEs : info.ChangelogEn;
+                if (string.IsNullOrEmpty(changelog))
                 {
-                    webClient.CachePolicy = new System.Net.Cache.RequestCachePolicy(System.Net.Cache.RequestCacheLevel.NoCacheNoStore);
-                    
-                    string json = await webClient.DownloadStringTaskAsync(new Uri("https://truckstudio.online/version.json"));
-                    
-                    string latestVersionStr = ExtractJsonValue(json, "version");
-                    string downloadUrl = ExtractJsonValue(json, "url");
-                    
-                    string changelogKey = _currentLanguage == "es" ? "changelog_es" : "changelog_en";
-                    string changelog = ExtractJsonValue(json, changelogKey);
-                    if (string.IsNullOrEmpty(changelog))
+                    changelog = _currentLanguage == "es" ? "Mejoras de estabilidad y rendimiento." : "Stability and performance improvements.";
+                }
+
+                if (string.IsNullOrEmpty(latestVersionStr) || string.IsNullOrEmpty(downloadUrl))
+                {
+                    ShowLocalizedMessageBox("Failed to parse update info from server.", "No se pudo interpretar la información de actualización del servidor.", "Error", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    BtnCheckUpdates.IsEnabled = true;
+                    return;
+                }
+
+                if (Version.TryParse(latestVersionStr, out Version latestVersion) && latestVersion > new Version(CurrentAppVersion))
+                {
+                    var answer = ShowLocalizedMessageBox(
+                        $"A new version (v{latestVersionStr}) is available!\nChangelog: {changelog}\n\nDo you want to download and install it now?",
+                        $"¡Hay una nueva versión (v{latestVersionStr}) disponible!\nCambios: {changelog}\n\n¿Quieres descargarla e instalarla ahora?",
+                        "Update Available", "Actualización Disponible", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+                    if (answer == MessageBoxResult.Yes)
                     {
-                        changelog = ExtractJsonValue(json, "changelog");
-                        if (string.IsNullOrEmpty(changelog))
+                        string currentExePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+                        string appDir = System.IO.Path.GetDirectoryName(currentExePath);
+                        string updaterExe = System.IO.Path.Combine(appDir, "TruckStudioUpdater.exe");
+
+                        if (!System.IO.File.Exists(updaterExe))
                         {
-                            changelog = _currentLanguage == "es" ? "Mejoras de estabilidad y rendimiento." : "Stability and performance improvements.";
-                        }
-                    }
-
-                    if (string.IsNullOrEmpty(latestVersionStr) || string.IsNullOrEmpty(downloadUrl))
-                    {
-                        ShowLocalizedMessageBox("Failed to parse update info from server.", "No se pudo interpretar la información de actualización del servidor.", "Error", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                        BtnCheckUpdates.IsEnabled = true;
-                        return;
-                    }
-
-                    Version currentVersion = new Version("0.3.0");
-                    if (Version.TryParse(latestVersionStr, out Version latestVersion) && latestVersion > currentVersion)
-                    {
-                        var answer = ShowLocalizedMessageBox(
-                            $"A new version (v{latestVersionStr}) is available!\nChangelog: {changelog}\n\nDo you want to download and install it now?",
-                            $"¡Hay una nueva versión (v{latestVersionStr}) disponible!\nCambios: {changelog}\n\n¿Quieres descargarla e instalarla ahora?",
-                            "Update Available", "Actualización Disponible", MessageBoxButton.YesNo, MessageBoxImage.Question);
-
-                        if (answer == MessageBoxResult.Yes)
-                        {
-                            string currentExePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
-                            string appDir = System.IO.Path.GetDirectoryName(currentExePath);
-                            string updaterExe = System.IO.Path.Combine(appDir, "TruckStudioUpdater.exe");
-
-                            if (!System.IO.File.Exists(updaterExe))
-                            {
-                                ShowLocalizedMessageBox("TruckStudioUpdater.exe not found! Please make sure it exists in the app folder.", "¡No se encontró TruckStudioUpdater.exe! Asegúrate de que esté en la carpeta de la aplicación.", "Error", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                BtnCheckUpdates.IsEnabled = true;
-                                return;
-                            }
-
-                            int curPid = System.Diagnostics.Process.GetCurrentProcess().Id;
-                            string args = $"/url \"{downloadUrl}\" /target \"{currentExePath}\" /pid {curPid}";
-
-                            System.Diagnostics.Process.Start(updaterExe, args);
-                            Application.Current.Shutdown();
+                            ShowLocalizedMessageBox("TruckStudioUpdater.exe not found! Please make sure it exists in the app folder.", "¡No se encontró TruckStudioUpdater.exe! Asegúrate de que esté en la carpeta de la aplicación.", "Error", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            BtnCheckUpdates.IsEnabled = true;
                             return;
                         }
+
+                        int curPid = System.Diagnostics.Process.GetCurrentProcess().Id;
+                        string args = $"/url \"{downloadUrl}\" /target \"{currentExePath}\" /pid {curPid}";
+
+                        System.Diagnostics.Process.Start(updaterExe, args);
+                        Application.Current.Shutdown();
+                        return;
                     }
-                    else
-                    {
-                        ShowLocalizedMessageBox("You already have the latest version!", "¡Ya tienes la última versión instalada!", "Up to date", "Al día", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
+                }
+                else
+                {
+                    ShowLocalizedMessageBox("You already have the latest version!", "¡Ya tienes la última versión instalada!", "Up to date", "Al día", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)

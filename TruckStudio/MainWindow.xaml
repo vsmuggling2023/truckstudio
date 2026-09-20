@@ -2,26 +2,27 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="TruckStudio" Height="700" Width="1050" WindowStartupLocation="CenterScreen"
+        Title="TruckStudio" Height="760" Width="1150" WindowStartupLocation="CenterScreen"
         Background="{DynamicResource BgBrush}" Foreground="{DynamicResource TextBrush}" FontFamily="Segoe UI"
         WindowStyle="None" AllowsTransparency="True" MouseLeftButtonDown="Window_MouseLeftButtonDown"
         Icon="pack://application:,,,/Assets/icon.ico">
-    
+
     <Window.Resources>
-        <!-- Modern Button Style -->
-        <Style x:Key="SidebarButton" TargetType="Button">
+        <!-- Navbar Button -->
+        <Style x:Key="NavButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{DynamicResource SubTextBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="20,15"/>
-            <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8" Margin="10,5">
-                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="9">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -41,20 +42,121 @@
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="25,12"/>
             <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="8">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="#2563eb"/>
+                                <Setter TargetName="border" Property="Opacity" Value="0.85"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <!-- Secondary Action Button -->
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="25,12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="BorderBrush" Value="#3b82f6"/>
+                                <Setter Property="Foreground" Value="#3b82f6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Window control buttons (minimize / close) -->
+        <Style x:Key="WindowButton" TargetType="Button">
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource SubTextBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="winbd" Background="{TemplateBinding Background}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="winbd" Property="Background" Value="#3b82f6"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="WindowCloseButton" TargetType="Button" BasedOn="{StaticResource WindowButton}">
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#ef4444"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Feature card -->
+        <Style x:Key="FeatureCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource CardBgBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Padding" Value="26"/>
+            <Setter Property="Margin" Value="0,0,0,18"/>
+        </Style>
+
+        <!-- Card header / description text -->
+        <Style x:Key="CardHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="17"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+        </Style>
+
+        <Style x:Key="CardDesc" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource SubTextBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource SubTextBrush}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+
+        <!-- Modern TextBox -->
+        <Style x:Key="ModernTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="{DynamicResource InputBgBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource InputTextBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="FontSize" Value="15"/>
         </Style>
 
         <!-- Modern ComboBox Style -->
@@ -130,295 +232,567 @@
 
     <Border CornerRadius="12" Background="{DynamicResource BgBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
         <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="260"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-            <!-- Sidebar -->
-            <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0" CornerRadius="12,0,0,12" Grid.Column="0">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+            <!-- Navbar -->
+            <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" CornerRadius="12,12,0,0" Grid.Row="0">
+                <Grid Margin="18,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
                     <!-- Logo Area -->
-                    <StackPanel Orientation="Horizontal" Margin="25,30,20,40" Grid.Row="0">
-                        <materialDesign:PackIcon Kind="Truck" Width="32" Height="32" Foreground="#3b82f6" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="TxtLogoTitle" Text="TruckStudio" Foreground="{DynamicResource TextBrush}" FontSize="22" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="36" Height="36" CornerRadius="11" Background="#3b82f6">
+                            <materialDesign:PackIcon Kind="Truck" Width="22" Height="22" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <TextBlock x:Name="TxtLogoTitle" Text="TruckStudio" Foreground="{DynamicResource TextBrush}" FontSize="19" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <!-- Navigation -->
-                    <StackPanel Grid.Row="1">
-                        <Button Style="{StaticResource SidebarButton}" Click="NavProfile_Click" x:Name="BtnNavProfile">
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Button Style="{StaticResource NavButton}" Click="NavProfile_Click" x:Name="BtnNavHome">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Account" Width="20" Height="20" Margin="0,0,15,0" VerticalAlignment="Center"/>
-                                <TextBlock x:Name="TxtNavProfile" Text="Player Profile" VerticalAlignment="Center"/>
+                                <materialDesign:PackIcon Kind="Home" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtNavHome" Text="Home" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource SidebarButton}" Click="NavTrucks_Click" x:Name="BtnNavTrucks">
+                        <Button Style="{StaticResource NavButton}" Click="NavTrucks_Click" x:Name="BtnNavFleet" Margin="2,0,0,0">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Truck" Width="20" Height="20" Margin="0,0,15,0" VerticalAlignment="Center"/>
-                                <TextBlock x:Name="TxtNavTrucks" Text="Trucks &amp; Trailers" VerticalAlignment="Center"/>
+                                <materialDesign:PackIcon Kind="Wrench" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtNavFleet" Text="Quick Fixes" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource SidebarButton}" Click="NavWorld_Click" x:Name="BtnNavWorld">
+                        <Button Style="{StaticResource NavButton}" Click="NavWorld_Click" x:Name="BtnNavMap" Margin="2,0,0,0">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Earth" Width="20" Height="20" Margin="0,0,15,0" VerticalAlignment="Center"/>
-                                <TextBlock x:Name="TxtNavWorld" Text="World &amp; Map" VerticalAlignment="Center"/>
+                                <materialDesign:PackIcon Kind="Map" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtNavMap" Text="Map &amp; Garages" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource SidebarButton}" Click="NavTuning_Click" x:Name="BtnNavTuning">
+                        <Button Style="{StaticResource NavButton}" Click="NavTuning_Click" x:Name="BtnNavPower" Margin="2,0,0,0">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Wrench" Width="20" Height="20" Margin="0,0,15,0" VerticalAlignment="Center"/>
-                                <TextBlock x:Name="TxtNavTuning" Text="Pro Tuning" VerticalAlignment="Center"/>
+                                <materialDesign:PackIcon Kind="Bolt" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtNavPower" Text="Power-Ups" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource SidebarButton}" Click="NavFreight_Click" x:Name="BtnNavFreight">
+                        <Button Style="{StaticResource NavButton}" Click="NavFreight_Click" x:Name="BtnNavJobs" Margin="2,0,0,0">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Briefcase" Width="20" Height="20" Margin="0,0,15,0" VerticalAlignment="Center"/>
-                                <TextBlock x:Name="TxtNavFreight" Text="Freight Market" VerticalAlignment="Center"/>
+                                <materialDesign:PackIcon Kind="Clipboard" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtNavJobs" Text="Custom Jobs" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource SidebarButton}" Click="NavSettings_Click" x:Name="BtnNavSettings">
+                        <Button Style="{StaticResource NavButton}" Click="NavSettings_Click" x:Name="BtnNavSettings" Margin="2,0,0,0">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Settings" Width="20" Height="20" Margin="0,0,15,0" VerticalAlignment="Center"/>
+                                <materialDesign:PackIcon Kind="Settings" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                 <TextBlock x:Name="TxtNavSettings" Text="Settings" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
                     </StackPanel>
-                    
-                    <Button Grid.Row="2" Margin="20" Style="{StaticResource SidebarButton}" Click="CloseApp_Click" Foreground="#ef4444">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Power" Width="20" Height="20" Margin="0,0,15,0" VerticalAlignment="Center"/>
-                            <TextBlock x:Name="TxtNavExit" Text="Exit" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
+
+                    <!-- Window controls -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button x:Name="BtnUpdateBadge" Style="{StaticResource NavButton}" Visibility="Collapsed" Click="UpdateBadge_Click" Margin="0,0,14,0">
+                            <Border Background="#f59e0b" CornerRadius="9" Padding="10,5">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Bell" Width="14" Height="14" Foreground="#111827" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="TxtUpdateBadge" Text="Update" FontSize="12" FontWeight="Bold" Foreground="#111827" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </Button>
+                        <Button x:Name="BtnNavExit" Style="{StaticResource WindowButton}" Click="CloseApp_Click" ToolTip="Exit">
+                            <materialDesign:PackIcon Kind="Power" Width="18" Height="18"/>
+                        </Button>
+                        <Button Style="{StaticResource WindowButton}" Click="MinimizeWindow_Click" ToolTip="Minimize" Margin="6,0,0,0">
+                            <materialDesign:PackIcon Kind="WindowMinimize" Width="18" Height="18"/>
+                        </Button>
+                        <Button Style="{StaticResource WindowCloseButton}" Click="CloseApp_Click" ToolTip="Close" Margin="6,0,0,0">
+                            <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
+                        </Button>
+                    </StackPanel>
                 </Grid>
             </Border>
 
             <!-- Main Content Area -->
-            <Grid Grid.Column="1">
+            <Grid Grid.Row="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
                 <!-- Header -->
-                <Grid Grid.Row="0" Margin="40,30,40,20">
-                    <TextBlock x:Name="PageTitle" Text="Player Profile" FontSize="28" FontWeight="Bold" Foreground="White"/>
+                <Grid Grid.Row="0" Margin="40,28,40,14">
+                    <TextBlock x:Name="PageTitle" Text="Home" FontSize="26" FontWeight="Bold" Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center"/>
                 </Grid>
 
                 <!-- Content Pages -->
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="40,0,40,40">
                     <Grid>
-                    <!-- Page 1: Profile -->
-                    <Grid x:Name="PageProfile" Visibility="Visible">
-                        <StackPanel>
-                            <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" Margin="0,0,0,20">
-                                <StackPanel>
-                                    <TextBlock x:Name="TxtSelectSaveGameHeader" Text="Select Save Game" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,25"/>
-
-                                    <TextBlock x:Name="TxtGameLabel" Text="Game" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,8"/>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                                        <RadioButton x:Name="RadioEts2" Content="Euro Truck Simulator 2" IsChecked="True" GroupName="GameGroup" Checked="GameRadio_Checked" Foreground="{DynamicResource TextBrush}" Margin="0,0,20,0" FontSize="14" FontWeight="SemiBold"/>
-                                        <RadioButton x:Name="RadioAts" Content="American Truck Simulator" GroupName="GameGroup" Checked="GameRadio_Checked" Foreground="{DynamicResource TextBrush}" FontSize="14" FontWeight="SemiBold"/>
-                                    </StackPanel>
-                                    
-                                    <TextBlock x:Name="ProfileLabel" Text="Euro Truck Simulator 2 Profile" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,5"/>
-                                    <ComboBox x:Name="ProfileComboBox" DisplayMemberPath="ProfileName" Width="350" HorizontalAlignment="Left" Margin="0,0,0,20" SelectionChanged="ProfileComboBox_SelectionChanged"/>
-                                    
-                                    <TextBlock x:Name="TxtSaveGameLabel" Text="Save Game" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,5"/>
-                                    <ComboBox x:Name="SaveComboBox" DisplayMemberPath="SaveName" Width="350" HorizontalAlignment="Left" Margin="0,0,0,30"/>
-
-                                    <Button x:Name="BtnLoadSelectedSave" Content="Load Selected Save" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="LoadSave_Click"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" x:Name="PanelProfileEdit" IsEnabled="False" Opacity="0.5">
-                                <StackPanel>
-                                    <TextBlock x:Name="TxtEconomyHeader" Text="Player Economy &amp; Progress" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,25"/>
-                                    
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                                        <StackPanel Margin="0,0,40,0">
-                                            <TextBlock x:Name="TxtMoneyLabel" Text="Money (€)" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,5"/>
-                                            <TextBox x:Name="TxtMoney" Width="200" Background="{DynamicResource InputBgBrush}" Foreground="{DynamicResource InputTextBrush}" BorderBrush="{DynamicResource BorderBrush}" Padding="10" FontSize="16" BorderThickness="1"/>
-                                        </StackPanel>
-                                        <StackPanel>
-                                            <TextBlock x:Name="TxtXpLabel" Text="Experience (XP)" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,5"/>
-                                            <TextBox x:Name="TxtExperience" Width="200" Background="{DynamicResource InputBgBrush}" Foreground="{DynamicResource InputTextBrush}" BorderBrush="{DynamicResource BorderBrush}" Padding="10" FontSize="16" BorderThickness="1"/>
-                                        </StackPanel>
-                                    </StackPanel>
-
-                                    <Button x:Name="BtnSaveProfile" Content="Save Profile Changes" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="SaveProfileChanges_Click" Background="#10b981"/>
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
-                    </Grid>
-
-                    <!-- Page 2: Trucks -->
-                    <Grid x:Name="PageTrucks" Visibility="Collapsed">
-                        <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" VerticalAlignment="Top">
-                            <StackPanel x:Name="PanelTrucksEdit" IsEnabled="False" Opacity="0.5">
-                                <TextBlock x:Name="TxtFleetHeader" Text="Fleet Maintenance &amp; Actions" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,25"/>
-                                
-                                <TextBlock x:Name="TxtFixFleetDesc" Text="Instantly repair all your trucks and trailers to 100% condition." Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                                <Button x:Name="BtnFixFleet" Content="Fix All Trucks &amp; Trailers" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="FixTrucks_Click" Background="#f59e0b" Padding="30,15" Margin="0,0,0,20"/>
-                                
-                                <TextBlock x:Name="TxtRefuelDesc" Text="Refuel all your trucks to 100% (without repairing)." Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                                <Button x:Name="BtnRefuel" Content="Refill Fuel (100%)" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="RefillFuel_Click" Background="#10b981" Padding="30,15" Margin="0,0,0,20"/>
-                                
-                                <TextBlock x:Name="TxtFixCargoDesc" Text="Fix the cargo damage of your active delivery back to 0%." Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                                <Button x:Name="BtnFixCargo" Content="Fix Cargo Damage (0%)" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="FixCargo_Click" Background="#8b5cf6" Padding="30,15" Margin="0,0,0,20"/>
-
-                                <TextBlock x:Name="TxtCargoWeightLabel" Text="Cargo Weight (Tons)" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,5"/>
-                                <TextBlock x:Name="TxtCargoWeightDesc" Text="Modify the weight of your active cargo. Set it to 0 for a weightless delivery, or make it heavier for a challenge." Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,25">
-                                    <TextBox x:Name="TxtCargoWeight" Width="200" Background="{DynamicResource InputBgBrush}" Foreground="{DynamicResource InputTextBrush}" BorderBrush="{DynamicResource BorderBrush}" Padding="10" FontSize="16" BorderThickness="1" Margin="0,0,15,0"/>
-                                    <Button x:Name="BtnSaveCargoWeight" Content="Update Weight" Style="{StaticResource PrimaryButton}" Click="SaveCargoWeight_Click" Background="#10b981" Padding="25,12"/>
-                                </StackPanel>
-
-                                <TextBlock x:Name="TxtDeliveryTimeLabel" Text="Remaining Delivery Time (Hours)" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,5"/>
-                                <TextBlock x:Name="TxtDeliveryTimeDesc" Text="Modify the remaining time for the active delivery. Negative values are not allowed; only positive numbers are accepted." Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,25">
-                                    <TextBox x:Name="TxtDeliveryTime" Width="200" Background="{DynamicResource InputBgBrush}" Foreground="{DynamicResource InputTextBrush}" BorderBrush="{DynamicResource BorderBrush}" Padding="10" FontSize="16" BorderThickness="1" Margin="0,0,15,0"/>
-                                    <Button x:Name="BtnSaveDeliveryTime" Content="Update Time" Style="{StaticResource PrimaryButton}" Click="SaveDeliveryTime_Click" Background="#10b981" Padding="25,12"/>
-                                </StackPanel>
-
-                                <TextBlock x:Name="TxtTeleportHeader" Text="Teleport (Camera 0)" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" Margin="0,10,0,10"/>
-                                
-                                <StackPanel x:Name="PanelTeleportDisabled" Visibility="Collapsed" Margin="0,0,0,20">
-                                    <TextBlock x:Name="TxtTeleportReqHeader" Text="Requirement: Camera 0 not enabled!" Foreground="#f43f5e" FontWeight="Bold" Margin="0,0,0,5"/>
-                                    <TextBlock x:Name="TxtTeleportReqDesc" Text="You must activate g_console and g_developer (set them to 1) in the config.cfg file located in your Documents folder." Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap" Margin="0,0,0,5"/>
-                                </StackPanel>
-
-                                <StackPanel x:Name="PanelTeleportEnabled" Margin="0,0,0,20">
-                                    <TextBlock x:Name="TxtTeleportInstructions" Text="Instructions: Save the game and press Alt + F12, as Truck Tools does." Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                                    <StackPanel Orientation="Horizontal">
-                                        <Button x:Name="BtnTeleport" Content="Teleport" Style="{StaticResource PrimaryButton}" Click="Teleport_Click" Background="#8b5cf6" Padding="20,10"/>
-                                    </StackPanel>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-
-                    <!-- Page 3: World & Map -->
-                    <Grid x:Name="PageWorld" Visibility="Collapsed">
-                        <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" VerticalAlignment="Top">
-                            <StackPanel x:Name="PanelWorldEdit" IsEnabled="False" Opacity="0.5">
-                                <TextBlock x:Name="TxtWorldHeader" Text="World &amp; Map Exploits" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,25"/>
-                                
-                                <!-- Visit All Garages -->
-                                <TextBlock x:Name="TxtVisitGaragesDesc" Text="Unlock every city without buying garages. Sets all undiscovered garages to the minimum (Small) so you can upgrade manually." Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                                <Button x:Name="BtnVisitGarages" Content="Visit All Garages" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,0,0,20" Background="#0ea5e9" Padding="30,15" Click="VisitGarages_Click"/>
-
-                                <!-- Upgrade Owned Garages -->
-                                <TextBlock x:Name="TxtUpgradeGaragesDesc" Text="Upgrade every garage you already own to maximum size (6 slots). Does not buy garages you don't own yet." Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                                <Button x:Name="BtnUpgradeGarages" Content="Upgrade All Owned Garages" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,0,0,20" Background="#10b981" Padding="30,15" Click="UpgradeGarages_Click"/>
-
-                                <!-- Buy All Garages -->
-                                <TextBlock x:Name="TxtBuyGaragesDesc" Text="Purchase and fully upgrade every garage to maximum size (6 slots) across the entire map." Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-                                <Button x:Name="BtnBuyGarages" Content="Buy All Garages" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Background="#f43f5e" Padding="30,15" Click="BuyAllGarages_Click"/>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-
-                    <!-- Page 4: Tuning -->
-                    <Grid x:Name="PageTuning" Visibility="Collapsed">
-                        <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" VerticalAlignment="Top">
-                            <StackPanel x:Name="PanelTuningEdit" IsEnabled="False" Opacity="0.5">
-                                <TextBlock x:Name="TxtTuningHeader" Text="Pro Tuning &amp; Cheats" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,25"/>
-                                
-                                <TextBlock x:Name="TxtTuningDesc" Text="Enable infinite fuel or completely max out all driver skills (ADR, Long Distance, etc)." Foreground="{DynamicResource SubTextBrush}" TextWrapping="Wrap" Margin="0,0,0,20"/>
-                                
-                                <Button x:Name="BtnMaxSkills" Content="Max Out All Skills" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,0,0,10" Background="#10b981" Padding="30,15" Click="MaxSkills_Click"/>
-                                
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                    <Button x:Name="BtnInfiniteFuel" Content="Extended Fuel (Set km)" Style="{StaticResource PrimaryButton}" Background="#fbbf24" Foreground="Black" Padding="30,15" Click="InfiniteFuel_Click" Margin="0,0,10,0"/>
-                                    <Button x:Name="BtnRestoreFuel" Content="Restore Fuel" Style="{StaticResource PrimaryButton}" Background="#3b82f6" Padding="30,15" Click="RestoreFuel_Click"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-
-                    <!-- Page 5: Freight Market -->
-                    <Grid x:Name="PageFreight" Visibility="Collapsed">
-                        <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" VerticalAlignment="Top">
-                            <StackPanel x:Name="PanelFreightEdit" IsEnabled="False" Opacity="0.5">
-                                <TextBlock x:Name="TxtFreightHeader" Text="Custom Job Generator" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,25"/>
-
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                                    <StackPanel Margin="0,0,40,0">
-                                        <TextBlock x:Name="TxtSourceCityLabel" Text="Source City" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,5"/>
-                                        <ComboBox x:Name="CbSourceCity" Width="300" HorizontalAlignment="Left" SelectionChanged="CbSourceCity_SelectionChanged"/>
-                                    </StackPanel>
-                                    <StackPanel>
-                                        <TextBlock x:Name="TxtSourceCompanyLabel" Text="Source Company" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,5"/>
-                                        <ComboBox x:Name="CbSourceCompany" Width="300" HorizontalAlignment="Left"/>
-                                    </StackPanel>
-                                </StackPanel>
-
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                                    <StackPanel Margin="0,0,40,0">
-                                        <TextBlock x:Name="TxtDestCityLabel" Text="Destination City" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,5"/>
-                                        <ComboBox x:Name="CbDestCity" Width="300" HorizontalAlignment="Left" SelectionChanged="CbDestCity_SelectionChanged"/>
-                                    </StackPanel>
-                                    <StackPanel>
-                                        <TextBlock x:Name="TxtDestCompanyLabel" Text="Destination Company" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,5"/>
-                                        <ComboBox x:Name="CbDestCompany" Width="300" HorizontalAlignment="Left"/>
-                                    </StackPanel>
-                                </StackPanel>
-
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                                    <StackPanel Margin="0,0,40,0">
-                                        <TextBlock x:Name="TxtCargoLabel" Text="Cargo" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,5"/>
-                                        <ComboBox x:Name="CbCargo" Width="300" HorizontalAlignment="Left"/>
-                                    </StackPanel>
-                                    <StackPanel>
-                                        <TextBlock x:Name="TxtUrgencyLabel" Text="Urgency" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,5"/>
-                                        <ComboBox x:Name="CbUrgency" Width="150" HorizontalAlignment="Left">
-                                            <ComboBoxItem Content="Normal" IsSelected="True"/>
-                                            <ComboBoxItem Content="Important"/>
-                                            <ComboBoxItem Content="Urgent"/>
-                                        </ComboBox>
-                                    </StackPanel>
-                                </StackPanel>
-
-                                <Button x:Name="BtnInjectJob" Content="Inject Custom Job" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="InjectJob_Click" Background="#8b5cf6" Padding="30,15"/>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-
-                    <!-- Page 6: Settings -->
-                    <Grid x:Name="PageSettings" Visibility="Collapsed">
-                        <Border Background="{DynamicResource CardBgBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="30" VerticalAlignment="Top">
+                        <!-- Page 1: Home -->
+                        <Grid x:Name="PageProfile" Visibility="Visible">
                             <StackPanel>
-                                <TextBlock x:Name="TxtSettingsTitle" Text="Application Settings" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}" Margin="0,0,0,25"/>
+                                <!-- How it works -->
+                                <Border Style="{StaticResource FeatureCard}">
+                                    <StackPanel>
+                                        <TextBlock x:Name="TxtHowItWorksHeader" Text="How it works" Style="{StaticResource CardHeader}"/>
+                                        <Grid Margin="0,18,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Margin="0,0,16,0">
+                                                <Border Width="40" Height="40" CornerRadius="20" Background="#3b82f6" HorizontalAlignment="Left">
+                                                    <TextBlock Text="1" Foreground="White" FontWeight="Bold" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <TextBlock x:Name="TxtStep1" Text="Pick your game" Style="{StaticResource CardDesc}" FontSize="14" Margin="0,10,0,0"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Margin="8,0,8,0">
+                                                <Border Width="40" Height="40" CornerRadius="20" Background="#10b981" HorizontalAlignment="Left">
+                                                    <TextBlock Text="2" Foreground="White" FontWeight="Bold" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <TextBlock x:Name="TxtStep2" Text="Choose your profile &amp; save" Style="{StaticResource CardDesc}" FontSize="14" Margin="0,10,0,0"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2" Margin="16,0,0,0">
+                                                <Border Width="40" Height="40" CornerRadius="20" Background="#8b5cf6" HorizontalAlignment="Left">
+                                                    <TextBlock Text="3" Foreground="White" FontWeight="Bold" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <TextBlock x:Name="TxtStep3" Text="Click Load and edit anything" Style="{StaticResource CardDesc}" FontSize="14" Margin="0,10,0,0"/>
+                                            </StackPanel>
+                                        </Grid>
+                                        <TextBlock x:Name="TxtHowItWorksSub" Text="No tech knowledge needed - every button below edits that save instantly." Style="{StaticResource CardDesc}" Margin="0,16,0,0"/>
+                                    </StackPanel>
+                                </Border>
 
-                                <TextBlock x:Name="TxtSettingsLanguage" Text="Language" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,10" FontSize="14" FontWeight="SemiBold"/>
-                                <ComboBox x:Name="CbSettingsLanguage" Width="250" HorizontalAlignment="Left" Margin="0,0,0,25" SelectionChanged="CbSettingsLanguage_SelectionChanged">
-                                    <ComboBoxItem Content="English" x:Name="ComboLangEn" IsSelected="True"/>
-                                    <ComboBoxItem Content="Español" x:Name="ComboLangEs"/>
-                                </ComboBox>
+                                <!-- Select Save Game -->
+                                <Border Style="{StaticResource FeatureCard}">
+                                    <StackPanel>
+                                        <TextBlock x:Name="TxtSelectSaveGameHeader" Text="Select Save Game" Style="{StaticResource CardHeader}" Margin="0,0,0,6"/>
+                                        <TextBlock x:Name="TxtSaveHint" Text="Your save games are found automatically. Pick the one you want to change." Style="{StaticResource CardDesc}" Margin="0,0,0,20"/>
 
-                                <TextBlock x:Name="TxtSettingsTheme" Text="Theme" Foreground="{DynamicResource SubTextBrush}" Margin="0,0,0,10" FontSize="14" FontWeight="SemiBold"/>
-                                <ComboBox x:Name="CbSettingsTheme" Width="250" HorizontalAlignment="Left" Margin="0,0,0,10" SelectionChanged="CbSettingsTheme_SelectionChanged">
-                                    <ComboBoxItem Content="Dark Theme" x:Name="ComboThemeDark" IsSelected="True"/>
-                                    <ComboBoxItem Content="Light Theme" x:Name="ComboThemeLight"/>
-                                </ComboBox>
+                                        <TextBlock x:Name="TxtGameLabel" Text="Game" Style="{StaticResource FieldLabel}"/>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,22">
+                                            <RadioButton x:Name="RadioEts2" Content="Euro Truck Simulator 2" IsChecked="True" GroupName="GameGroup" Checked="GameRadio_Checked" Foreground="{DynamicResource TextBrush}" Margin="0,0,20,0" FontSize="14" FontWeight="SemiBold"/>
+                                            <RadioButton x:Name="RadioAts" Content="American Truck Simulator" GroupName="GameGroup" Checked="GameRadio_Checked" Foreground="{DynamicResource TextBrush}" FontSize="14" FontWeight="SemiBold"/>
+                                        </StackPanel>
 
-                                <Button x:Name="BtnCheckUpdates" Content="Check for Updates" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,25,0,0" Click="CheckUpdates_Click" Background="#8b5cf6"/>
+                                        <TextBlock x:Name="ProfileLabel" Text="Euro Truck Simulator 2 Profile" Style="{StaticResource FieldLabel}"/>
+                                        <ComboBox x:Name="ProfileComboBox" DisplayMemberPath="ProfileName" Width="380" HorizontalAlignment="Left" Margin="0,0,0,20" SelectionChanged="ProfileComboBox_SelectionChanged"/>
+
+                                        <TextBlock x:Name="TxtSaveGameLabel" Text="Save Game" Style="{StaticResource FieldLabel}"/>
+                                        <ComboBox x:Name="SaveComboBox" DisplayMemberPath="SaveName" Width="380" HorizontalAlignment="Left" Margin="0,0,0,24"/>
+
+                                        <Button x:Name="BtnLoadSelectedSave" Content="Load Save" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="LoadSave_Click" Padding="35,14"/>
+                                        <Button x:Name="BtnRefreshProfiles" Content="Refresh" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left" Click="RefreshProfiles_Click" Padding="25,14" Margin="12,0,0,0"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Economy -->
+                                <Border x:Name="PanelProfileEdit" Style="{StaticResource FeatureCard}" IsEnabled="False" Opacity="0.5">
+                                    <StackPanel>
+                                        <TextBlock x:Name="TxtEconomyHeader" Text="Your money &amp; level" Style="{StaticResource CardHeader}" Margin="0,0,0,6"/>
+                                        <TextBlock x:Name="TxtEconomySub" Text="Set your balance and experience to whatever you want (whole numbers only)." Style="{StaticResource CardDesc}" Margin="0,0,0,22"/>
+
+                                        <StackPanel Orientation="Horizontal">
+                                            <StackPanel Margin="0,0,40,0">
+                                                <TextBlock x:Name="TxtMoneyLabel" Text="Money (€)" Style="{StaticResource FieldLabel}"/>
+                                                <TextBox x:Name="TxtMoney" Width="220" Style="{StaticResource ModernTextBox}"/>
+                                            </StackPanel>
+                                            <StackPanel>
+                                                <TextBlock x:Name="TxtXpLabel" Text="Experience (XP)" Style="{StaticResource FieldLabel}"/>
+                                                <TextBox x:Name="TxtExperience" Width="220" Style="{StaticResource ModernTextBox}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <Button x:Name="BtnSaveProfile" Content="Save Changes" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="SaveProfileChanges_Click" Background="#10b981" Margin="0,26,0,0" Padding="35,14"/>
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
-                        </Border>
-                    </Grid>
+                        </Grid>
+
+                        <!-- Page 2: Quick Fixes (Trucks & Trailers) -->
+                        <Grid x:Name="PageTrucks" Visibility="Collapsed">
+                            <StackPanel x:Name="PanelTrucksEdit" IsEnabled="False" Opacity="0.5">
+                                <Border Style="{StaticResource FeatureCard}" Background="#1e293b">
+                                    <TextBlock x:Name="TxtLockedHintFleet" Text="Tip: load a save first (Home) to unlock these tools." Foreground="#fbbf24" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                </Border>
+
+                                <!-- Fix fleet -->
+                                <Border Style="{StaticResource FeatureCard}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="52" Height="52" CornerRadius="14" Background="#f59e0b" VerticalAlignment="Top">
+                                            <materialDesign:PackIcon Kind="Wrench" Width="26" Height="26" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="18,0,0,0">
+                                            <TextBlock x:Name="TxtFixFleetTitle" Text="Fix everything at once" Style="{StaticResource CardHeader}"/>
+                                            <TextBlock x:Name="TxtFixFleetDesc" Text="Accident? Repair all your trucks and trailers to 100% condition instantly." Style="{StaticResource CardDesc}" Margin="0,4,0,14"/>
+                                            <Button x:Name="BtnFixFleet" Content="Repair Everything" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="FixTrucks_Click" Background="#f59e0b" Padding="30,13"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Refuel -->
+                                <Border Style="{StaticResource FeatureCard}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="52" Height="52" CornerRadius="14" Background="#10b981" VerticalAlignment="Top">
+                                            <materialDesign:PackIcon Kind="Fuel" Width="26" Height="26" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="18,0,0,0">
+                                            <TextBlock x:Name="TxtRefuelTitle" Text="Fill your tanks" Style="{StaticResource CardHeader}"/>
+                                            <TextBlock x:Name="TxtRefuelDesc" Text="Refuel every truck to 100% - no more running on empty." Style="{StaticResource CardDesc}" Margin="0,4,0,14"/>
+                                            <Button x:Name="BtnRefuel" Content="Refill Fuel (100%)" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="RefillFuel_Click" Background="#10b981" Padding="30,13"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Fix cargo -->
+                                <Border Style="{StaticResource FeatureCard}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="52" Height="52" CornerRadius="14" Background="#8b5cf6" VerticalAlignment="Top">
+                                            <materialDesign:PackIcon Kind="PackageVariant" Width="26" Height="26" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="18,0,0,0">
+                                            <TextBlock x:Name="TxtFixCargoTitle" Text="Save your delivery" Style="{StaticResource CardHeader}"/>
+                                            <TextBlock x:Name="TxtFixCargoDesc" Text="Damage on the cargo you're hauling? Reset it to 0% and keep the full payment." Style="{StaticResource CardDesc}" Margin="0,4,0,14"/>
+                                            <Button x:Name="BtnFixCargo" Content="Fix Cargo Damage (0%)" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="FixCargo_Click" Background="#8b5cf6" Padding="30,13"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Cargo weight -->
+                                <Border Style="{StaticResource FeatureCard}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="52" Height="52" CornerRadius="14" Background="#10b981" VerticalAlignment="Top">
+                                            <materialDesign:PackIcon Kind="ScaleBalance" Width="26" Height="26" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="18,0,0,0">
+                                            <TextBlock x:Name="TxtCargoWeightTitle" Text="Adjust your load" Style="{StaticResource CardHeader}"/>
+                                            <TextBlock x:Name="TxtCargoWeightLabel" Text="Cargo Weight (Tons)" Style="{StaticResource FieldLabel}" Margin="0,4,0,6"/>
+                                            <TextBlock x:Name="TxtCargoWeightDesc" Text="Set the weight you're hauling. 0 = light as a feather, more = a real challenge." Style="{StaticResource CardDesc}" Margin="0,0,0,12"/>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBox x:Name="TxtCargoWeight" Width="180" Style="{StaticResource ModernTextBox}" Margin="0,0,15,0"/>
+                                                <Button x:Name="BtnSaveCargoWeight" Content="Update Weight" Style="{StaticResource PrimaryButton}" Background="#10b981" Padding="25,12"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Delivery time -->
+                                <Border Style="{StaticResource FeatureCard}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="52" Height="52" CornerRadius="14" Background="#0ea5e9" VerticalAlignment="Top">
+                                            <materialDesign:PackIcon Kind="Clock" Width="26" Height="26" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="18,0,0,0">
+                                            <TextBlock x:Name="TxtDeliveryTimeTitle" Text="Buy more time" Style="{StaticResource CardHeader}"/>
+                                            <TextBlock x:Name="TxtDeliveryTimeLabel" Text="Remaining Delivery Time (Hours)" Style="{StaticResource FieldLabel}" Margin="0,4,0,6"/>
+                                            <TextBlock x:Name="TxtDeliveryTimeDesc" Text="About to be late? Add more hours to the active delivery (positive numbers only)." Style="{StaticResource CardDesc}" Margin="0,0,0,12"/>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBox x:Name="TxtDeliveryTime" Width="180" Style="{StaticResource ModernTextBox}" Margin="0,0,15,0"/>
+                                                <Button x:Name="BtnSaveDeliveryTime" Content="Update Time" Style="{StaticResource PrimaryButton}" Background="#0ea5e9" Padding="25,12"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Teleport -->
+                                <Border Style="{StaticResource FeatureCard}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="52" Height="52" CornerRadius="14" Background="#6366f1" VerticalAlignment="Top">
+                                            <materialDesign:PackIcon Kind="MapMarker" Width="26" Height="26" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="18,0,0,0">
+                                            <TextBlock x:Name="TxtTeleportTitle" Text="Teleport to a saved spot" Style="{StaticResource CardHeader}"/>
+                                            <StackPanel x:Name="PanelTeleportDisabled" Visibility="Collapsed" Margin="0,12,0,0">
+                                                <TextBlock x:Name="TxtTeleportReqHeader" Text="Requirement: Camera 0 not enabled!" Foreground="#f43f5e" FontWeight="Bold" Margin="0,0,0,5"/>
+                                                <TextBlock x:Name="TxtTeleportReqDesc" Text="You need to enable two developer options (g_console and g_developer = 1) in the config.cfg file in your Documents folder." Style="{StaticResource CardDesc}" Margin="0,0,0,5"/>
+                                            </StackPanel>
+                                            <StackPanel x:Name="PanelTeleportEnabled" Margin="0,12,0,0">
+                                                <TextBlock x:Name="TxtTeleportInstructions" Text="In game, save and press Alt + F12 to mark the spot, then come back and press Teleport." Style="{StaticResource CardDesc}" Margin="0,0,0,12"/>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Button x:Name="BtnTeleport" Content="Teleport" Style="{StaticResource PrimaryButton}" Click="Teleport_Click" Background="#6366f1" Padding="28,13"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- License plate -->
+                                <Border Style="{StaticResource FeatureCard}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="52" Height="52" CornerRadius="14" Background="#ec4899" VerticalAlignment="Top">
+                                            <materialDesign:PackIcon Kind="CardText" Width="26" Height="26" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="18,0,0,0">
+                                            <TextBlock x:Name="TxtLicensePlateTitle" Text="Design your license plate" Style="{StaticResource CardHeader}"/>
+                                            <TextBlock x:Name="TxtLicensePlateDesc" Text="Put whatever you want on your truck's plate and pick the colors. You can also stamp the same plate on the attached trailer." Style="{StaticResource CardDesc}" Margin="0,4,0,12"/>
+                                            <StackPanel Orientation="Horizontal">
+                                                <StackPanel Margin="0,0,16,0">
+                                                    <TextBlock x:Name="TxtPlateTextLabel" Text="Plate Text" Style="{StaticResource FieldLabel}"/>
+                                                    <TextBox x:Name="TxtLicensePlate" Width="150" MaxLength="24" Style="{StaticResource ModernTextBox}" TextChanged="LicensePlate_TextChanged"/>
+                                                </StackPanel>
+                                                <StackPanel Margin="0,0,16,0">
+                                                    <TextBlock x:Name="TxtPlateBgColorLabel" Text="Background" Style="{StaticResource FieldLabel}"/>
+                                                    <ComboBox x:Name="CbPlateBgColor" Width="115" IsEditable="True" TextSearch.TextPath="Tag" SelectionChanged="PlateColor_SelectionChanged"/>
+                                                </StackPanel>
+                                                <StackPanel Margin="0,0,16,0">
+                                                    <TextBlock x:Name="TxtPlateTextColorLabel" Text="Text Color" Style="{StaticResource FieldLabel}"/>
+                                                    <ComboBox x:Name="CbPlateTextColor" Width="115" IsEditable="True" TextSearch.TextPath="Tag" SelectionChanged="PlateColor_SelectionChanged"/>
+                                                </StackPanel>
+                                                <StackPanel>
+                                                    <TextBlock x:Name="TxtPlatePreviewLabel" Text="Preview" Style="{StaticResource FieldLabel}"/>
+                                                    <Border x:Name="PlatePreviewBorder" Width="135" Height="32" CornerRadius="3" BorderThickness="3" BorderBrush="Transparent" Background="White">
+                                                        <TextBlock x:Name="PlatePreviewText" Text="T-TOOLS" FontWeight="Bold" FontSize="15" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                    </Border>
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                                <Button x:Name="BtnSaveLicensePlate" Content="Apply Plate" Style="{StaticResource PrimaryButton}" Background="#ec4899" Padding="20,10" Click="SaveLicensePlate_Click"/>
+                                                <CheckBox x:Name="ChkPlateColoredMargin" Content="Colored border (uses text color)" Foreground="{DynamicResource SubTextBrush}" VerticalAlignment="Center" Margin="20,0,0,0" Click="PlateOptions_Changed"/>
+                                                <CheckBox x:Name="ChkPlateApplyTrailer" Content="Apply to attached trailer too" Foreground="{DynamicResource SubTextBrush}" VerticalAlignment="Center" Margin="20,0,0,0" Click="PlateOptions_Changed"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Page 3: Map & Garages (World) -->
+                        <Grid x:Name="PageWorld" Visibility="Collapsed">
+                            <StackPanel x:Name="PanelWorldEdit" IsEnabled="False" Opacity="0.5">
+                                <Border Style="{StaticResource FeatureCard}" Background="#1e293b">
+                                    <TextBlock x:Name="TxtLockedHintWorld" Text="Tip: load a save first (Home) to unlock these tools." Foreground="#fbbf24" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                </Border>
+
+                                <Border Style="{StaticResource FeatureCard}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="52" Height="52" CornerRadius="14" Background="#0ea5e9" VerticalAlignment="Top">
+                                            <materialDesign:PackIcon Kind="MapMarker" Width="26" Height="26" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="18,0,0,0">
+                                            <TextBlock x:Name="TxtVisitGaragesTitle" Text="Open the whole map" Style="{StaticResource CardHeader}"/>
+                                            <TextBlock x:Name="TxtVisitGaragesDesc" Text="Unlock every city without paying anything. You can buy a garage anywhere later." Style="{StaticResource CardDesc}" Margin="0,4,0,14"/>
+                                            <Button x:Name="BtnVisitGarages" Content="Unlock All Cities" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Background="#0ea5e9" Padding="30,13" Click="VisitGarages_Click"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <Border Style="{StaticResource FeatureCard}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="52" Height="52" CornerRadius="14" Background="#10b981" VerticalAlignment="Top">
+                                            <materialDesign:PackIcon Kind="Garage" Width="26" Height="26" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="18,0,0,0">
+                                            <TextBlock x:Name="TxtUpgradeGaragesTitle" Text="Make your garages bigger" Style="{StaticResource CardHeader}"/>
+                                            <TextBlock x:Name="TxtUpgradeGaragesDesc" Text="Turn every garage you already own into the biggest size (6 parking slots)." Style="{StaticResource CardDesc}" Margin="0,4,0,14"/>
+                                            <Button x:Name="BtnUpgradeGarages" Content="Upgrade All Owned Garages" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Background="#10b981" Padding="30,13" Click="UpgradeGarages_Click"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <Border Style="{StaticResource FeatureCard}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="52" Height="52" CornerRadius="14" Background="#f43f5e" VerticalAlignment="Top">
+                                            <materialDesign:PackIcon Kind="Cash" Width="26" Height="26" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="18,0,0,0">
+                                            <TextBlock x:Name="TxtBuyGaragesTitle" Text="Own every garage" Style="{StaticResource CardHeader}"/>
+                                            <TextBlock x:Name="TxtBuyGaragesDesc" Text="Buy and fully upgrade every garage on the whole map. It costs real in-game money - be ready!" Style="{StaticResource CardDesc}" Margin="0,4,0,14"/>
+                                            <Button x:Name="BtnBuyGarages" Content="Buy All Garages" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Background="#f43f5e" Padding="30,13" Click="BuyAllGarages_Click"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Page 4: Power-Ups (Tuning) -->
+                        <Grid x:Name="PageTuning" Visibility="Collapsed">
+                            <StackPanel x:Name="PanelTuningEdit" IsEnabled="False" Opacity="0.5">
+                                <Border Style="{StaticResource FeatureCard}" Background="#1e293b">
+                                    <TextBlock x:Name="TxtLockedHintTuning" Text="Tip: load a save first (Home) to unlock these tools." Foreground="#fbbf24" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                </Border>
+
+                                <Border Style="{StaticResource FeatureCard}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="52" Height="52" CornerRadius="14" Background="#10b981" VerticalAlignment="Top">
+                                            <materialDesign:PackIcon Kind="Trophy" Width="26" Height="26" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="18,0,0,0">
+                                            <TextBlock x:Name="TxtMaxSkillsTitle" Text="Be the best driver" Style="{StaticResource CardHeader}"/>
+                                            <TextBlock x:Name="TxtMaxSkillsDesc" Text="Unlock every driver skill (ADR, Long Distance, etc.) instantly." Style="{StaticResource CardDesc}" Margin="0,4,0,14"/>
+                                            <Button x:Name="BtnMaxSkills" Content="Max Out All Skills" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Background="#10b981" Padding="30,13" Click="MaxSkills_Click"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <Border Style="{StaticResource FeatureCard}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="52" Height="52" CornerRadius="14" Background="#fbbf24" VerticalAlignment="Top">
+                                            <materialDesign:PackIcon Kind="Fuel" Width="26" Height="26" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="18,0,0,0">
+                                            <TextBlock x:Name="TxtInfiniteFuelTitle" Text="Almost never refuel" Style="{StaticResource CardHeader}"/>
+                                            <TextBlock x:Name="TxtInfiniteFuelDesc" Text="Massively extend your fuel tank. You pick the amount with a simple box." Style="{StaticResource CardDesc}" Margin="0,4,0,14"/>
+                                            <Button x:Name="BtnInfiniteFuel" Content="Extended Fuel" Style="{StaticResource PrimaryButton}" Background="#fbbf24" Foreground="Black" Padding="30,13" Click="InfiniteFuel_Click"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <Border Style="{StaticResource FeatureCard}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="52" Height="52" CornerRadius="14" Background="#3b82f6" VerticalAlignment="Top">
+                                            <materialDesign:PackIcon Kind="Restore" Width="26" Height="26" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="18,0,0,0">
+                                            <TextBlock x:Name="TxtRestoreFuelTitle" Text="Back to normal fuel" Style="{StaticResource CardHeader}"/>
+                                            <TextBlock x:Name="TxtRestoreFuelDesc" Text="Put your fuel tank back to its original size." Style="{StaticResource CardDesc}" Margin="0,4,0,14"/>
+                                            <Button x:Name="BtnRestoreFuel" Content="Restore Fuel" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Background="#3b82f6" Padding="30,13" Click="RestoreFuel_Click"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Page 5: Custom Jobs (Freight Market) -->
+                        <Grid x:Name="PageFreight" Visibility="Collapsed">
+                            <StackPanel x:Name="PanelFreightEdit" IsEnabled="False" Opacity="0.5">
+                                <Border Style="{StaticResource FeatureCard}" Background="#1e293b">
+                                    <TextBlock x:Name="TxtLockedHintFreight" Text="Tip: load a save first (Home) to unlock these tools." Foreground="#fbbf24" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                                </Border>
+
+                                <Border Style="{StaticResource FeatureCard}">
+                                    <StackPanel>
+                                        <TextBlock x:Name="TxtFreightHeader" Text="Create your own job" Style="{StaticResource CardHeader}"/>
+                                        <TextBlock x:Name="TxtFreightIntro" Text="Pick where the job starts, where it ends, and what cargo you carry. The app builds the rest for you." Style="{StaticResource CardDesc}" Margin="0,4,0,24"/>
+                                        <TextBlock x:Name="TxtFreightNote" Text="Note: It creates a company job (the trailer is provided), like the main ones in the game's job list." Style="{StaticResource CardDesc}" Margin="0,0,0,22" Foreground="#94a3b8"/>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                            <StackPanel Margin="0,0,40,0">
+                                                <TextBlock x:Name="TxtSourceCityLabel" Text="Start City" Style="{StaticResource FieldLabel}"/>
+                                                <ComboBox x:Name="CbSourceCity" Width="300" HorizontalAlignment="Left" SelectionChanged="CbSourceCity_SelectionChanged"/>
+                                            </StackPanel>
+                                            <StackPanel>
+                                                <TextBlock x:Name="TxtSourceCompanyLabel" Text="Start Company" Style="{StaticResource FieldLabel}"/>
+                                                <ComboBox x:Name="CbSourceCompany" Width="300" HorizontalAlignment="Left"/>
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                            <StackPanel Margin="0,0,40,0">
+                                                <TextBlock x:Name="TxtDestCityLabel" Text="Destination City" Style="{StaticResource FieldLabel}"/>
+                                                <ComboBox x:Name="CbDestCity" Width="300" HorizontalAlignment="Left" SelectionChanged="CbDestCity_SelectionChanged"/>
+                                            </StackPanel>
+                                            <StackPanel>
+                                                <TextBlock x:Name="TxtDestCompanyLabel" Text="Destination Company" Style="{StaticResource FieldLabel}"/>
+                                                <ComboBox x:Name="CbDestCompany" Width="300" HorizontalAlignment="Left"/>
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                                            <StackPanel Margin="0,0,40,0">
+                                                <TextBlock x:Name="TxtCargoLabel" Text="Cargo" Style="{StaticResource FieldLabel}"/>
+                                                <ComboBox x:Name="CbCargo" Width="300" HorizontalAlignment="Left"/>
+                                            </StackPanel>
+                                            <StackPanel>
+                                                <TextBlock x:Name="TxtUrgencyLabel" Text="Urgency" Style="{StaticResource FieldLabel}"/>
+                                                <ComboBox x:Name="CbUrgency" Width="160" HorizontalAlignment="Left">
+                                                    <ComboBoxItem Content="Normal" IsSelected="True"/>
+                                                    <ComboBoxItem Content="Important"/>
+                                                    <ComboBoxItem Content="Urgent"/>
+                                                </ComboBox>
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <Button x:Name="BtnInjectJob" Content="Create Custom Job" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="InjectJob_Click" Background="#8b5cf6" Padding="30,14"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Page 6: Settings -->
+                        <Grid x:Name="PageSettings" Visibility="Collapsed">
+                            <Border Style="{StaticResource FeatureCard}" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <TextBlock x:Name="TxtSettingsTitle" Text="Application Settings" Style="{StaticResource CardHeader}" Margin="0,0,0,25"/>
+
+                                    <TextBlock x:Name="TxtSettingsLanguage" Text="Language" Style="{StaticResource FieldLabel}" FontSize="14"/>
+                                    <ComboBox x:Name="CbSettingsLanguage" Width="250" HorizontalAlignment="Left" Margin="0,0,0,25" SelectionChanged="CbSettingsLanguage_SelectionChanged">
+                                        <ComboBoxItem Content="English" x:Name="ComboLangEn" IsSelected="True"/>
+                                        <ComboBoxItem Content="Español" x:Name="ComboLangEs"/>
+                                    </ComboBox>
+
+                                    <TextBlock x:Name="TxtSettingsTheme" Text="Theme" Style="{StaticResource FieldLabel}" FontSize="14"/>
+                                    <ComboBox x:Name="CbSettingsTheme" Width="250" HorizontalAlignment="Left" Margin="0,0,0,10" SelectionChanged="CbSettingsTheme_SelectionChanged">
+                                        <ComboBoxItem Content="Dark Theme" x:Name="ComboThemeDark" IsSelected="True"/>
+                                        <ComboBoxItem Content="Light Theme" x:Name="ComboThemeLight"/>
+                                    </ComboBox>
+
+                                    <Button x:Name="BtnCheckUpdates" Content="Check for Updates" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,25,0,0" Click="CheckUpdates_Click" Background="#8b5cf6"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
                     </Grid>
                 </ScrollViewer>
             </Grid>
-            
+
             <!-- Version Number -->
-            <TextBlock Text="v0.3.0-alpha" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,15,15" Foreground="#64748b" FontSize="12" IsHitTestVisible="False" Panel.ZIndex="10"/>
+            <TextBlock Text="v0.3.1-alpha" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,15,15" Foreground="#64748b" FontSize="12" IsHitTestVisible="False" Panel.ZIndex="10"/>
         </Grid>
     </Border>
 </Window>

@@ -21,6 +21,7 @@ namespace TruckStudio
             ExtractUpdater();
             LoadSettings();
             ApplyTheme(_isDarkTheme);
+            PopulatePlateColorCombos();
             Loaded += MainWindow_Loaded;
         }
 
@@ -153,7 +154,9 @@ namespace TruckStudio
             _isLoadingSettings = false;
 
             ApplyTheme(_isDarkTheme);
+            SetActiveNav(BtnNavHome);
             LoadProfilesForSelectedGame();
+            CheckForUpdatesSilently();
         }
 
         private void Window_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -174,6 +177,7 @@ namespace TruckStudio
             PageTuning.Visibility = Visibility.Collapsed;
             PageFreight.Visibility = Visibility.Collapsed;
             PageSettings.Visibility = Visibility.Collapsed;
+            SetActiveNav(BtnNavHome);
             TranslateUI();
         }
 
@@ -185,6 +189,7 @@ namespace TruckStudio
             PageTuning.Visibility = Visibility.Collapsed;
             PageFreight.Visibility = Visibility.Collapsed;
             PageSettings.Visibility = Visibility.Collapsed;
+            SetActiveNav(BtnNavFleet);
             TranslateUI();
         }
 
@@ -196,6 +201,7 @@ namespace TruckStudio
             PageTuning.Visibility = Visibility.Collapsed;
             PageFreight.Visibility = Visibility.Collapsed;
             PageSettings.Visibility = Visibility.Collapsed;
+            SetActiveNav(BtnNavMap);
             TranslateUI();
         }
 
@@ -207,6 +213,7 @@ namespace TruckStudio
             PageTuning.Visibility = Visibility.Visible;
             PageFreight.Visibility = Visibility.Collapsed;
             PageSettings.Visibility = Visibility.Collapsed;
+            SetActiveNav(BtnNavPower);
             TranslateUI();
         }
 
@@ -218,6 +225,7 @@ namespace TruckStudio
             PageTuning.Visibility = Visibility.Collapsed;
             PageFreight.Visibility = Visibility.Visible;
             PageSettings.Visibility = Visibility.Collapsed;
+            SetActiveNav(BtnNavJobs);
             TranslateUI();
         }
 
@@ -229,7 +237,37 @@ namespace TruckStudio
             PageTuning.Visibility = Visibility.Collapsed;
             PageFreight.Visibility = Visibility.Collapsed;
             PageSettings.Visibility = Visibility.Visible;
+            SetActiveNav(BtnNavSettings);
             TranslateUI();
+        }
+
+        private void MinimizeWindow_Click(object sender, RoutedEventArgs e)
+        {
+            this.WindowState = WindowState.Minimized;
+        }
+
+        private void SetActiveNav(System.Windows.Controls.Button activeButton)
+        {
+            var normalFg = (System.Windows.Media.Brush)FindResource("SubTextBrush");
+            var activeBg = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#3b82f6"));
+
+            var navButtons = new[] { BtnNavHome, BtnNavFleet, BtnNavMap, BtnNavPower, BtnNavJobs, BtnNavSettings };
+            foreach (var b in navButtons)
+            {
+                b.Background = System.Windows.Media.Brushes.Transparent;
+                b.Foreground = normalFg;
+            }
+            activeButton.Background = activeBg;
+            activeButton.Foreground = System.Windows.Media.Brushes.White;
+        }
+
+        private void SetLockedHints(bool isLoaded)
+        {
+            Visibility v = isLoaded ? Visibility.Collapsed : Visibility.Visible;
+            TxtLockedHintFleet.Visibility = v;
+            TxtLockedHintWorld.Visibility = v;
+            TxtLockedHintTuning.Visibility = v;
+            TxtLockedHintFreight.Visibility = v;
         }
 
         private void ApplyTheme(bool isDark)
@@ -261,99 +299,160 @@ namespace TruckStudio
 
             // Sidebar
             TxtLogoTitle.Text = "TruckStudio";
-            TxtNavProfile.Text = isEs ? "Perfil de Usuario" : "Player Profile";
-            TxtNavTrucks.Text = isEs ? "Camiones y Remolques" : "Trucks & Trailers";
-            TxtNavWorld.Text = isEs ? "Mundo y Mapa" : "World & Map";
-            TxtNavTuning.Text = isEs ? "Tuning Pro" : "Pro Tuning";
-            TxtNavFreight.Text = isEs ? "Mercado de Fletes" : "Freight Market";
+            TxtNavHome.Text = isEs ? "Inicio" : "Home";
+            TxtNavFleet.Text = isEs ? "Arreglos Rápidos" : "Quick Fixes";
+            TxtNavMap.Text = isEs ? "Mapa y Garajes" : "Map & Garages";
+            TxtNavPower.Text = isEs ? "Mejoras" : "Power-Ups";
+            TxtNavJobs.Text = isEs ? "Trabajos a Medida" : "Custom Jobs";
             TxtNavSettings.Text = isEs ? "Ajustes" : "Settings";
-            TxtNavExit.Text = isEs ? "Salir" : "Exit";
+            BtnNavExit.ToolTip = isEs ? "Salir" : "Exit";
 
             // Page Titles
-            if (PageProfile.Visibility == Visibility.Visible) PageTitle.Text = isEs ? "Perfil de Usuario" : "Player Profile";
-            else if (PageTrucks.Visibility == Visibility.Visible) PageTitle.Text = isEs ? "Camiones y Remolques" : "Trucks & Trailers";
-            else if (PageWorld.Visibility == Visibility.Visible) PageTitle.Text = isEs ? "Mundo y Mapa" : "World & Map";
-            else if (PageTuning.Visibility == Visibility.Visible) PageTitle.Text = isEs ? "Tuning Pro" : "Pro Tuning";
-            else if (PageFreight.Visibility == Visibility.Visible) PageTitle.Text = isEs ? "Mercado de Fletes" : "Freight Market";
+            if (PageProfile.Visibility == Visibility.Visible) PageTitle.Text = isEs ? "Inicio" : "Home";
+            else if (PageTrucks.Visibility == Visibility.Visible) PageTitle.Text = isEs ? "Arreglos Rápidos" : "Quick Fixes";
+            else if (PageWorld.Visibility == Visibility.Visible) PageTitle.Text = isEs ? "Mapa y Garajes" : "Map & Garages";
+            else if (PageTuning.Visibility == Visibility.Visible) PageTitle.Text = isEs ? "Mejoras" : "Power-Ups";
+            else if (PageFreight.Visibility == Visibility.Visible) PageTitle.Text = isEs ? "Trabajos a Medida" : "Custom Jobs";
             else if (PageSettings.Visibility == Visibility.Visible) PageTitle.Text = isEs ? "Ajustes" : "Settings";
 
-            // Page 1: Profile
+            // Page 1: Home
+            TxtHowItWorksHeader.Text = isEs ? "Cómo funciona" : "How it works";
+            TxtStep1.Text = isEs ? "Elige tu juego" : "Pick your game";
+            TxtStep2.Text = isEs ? "Elige tu perfil y partida" : "Choose your profile & save";
+            TxtStep3.Text = isEs ? "Clic en Cargar y edita lo que quieras" : "Click Load and edit anything";
+            TxtHowItWorksSub.Text = isEs
+                ? "No necesitas saber nada técnico: los botones de abajo editan esa partida al instante."
+                : "No tech knowledge needed - every button below edits that save instantly.";
             TxtSelectSaveGameHeader.Text = isEs ? "Seleccionar Partida" : "Select Save Game";
+            TxtSaveHint.Text = isEs
+                ? "Tus partidas se detectan automáticamente. Elige la que quieras modificar."
+                : "Your save games are found automatically. Pick the one you want to change.";
             TxtGameLabel.Text = isEs ? "Juego" : "Game";
             RadioEts2.Content = "Euro Truck Simulator 2";
             RadioAts.Content = "American Truck Simulator";
-            ProfileLabel.Text = isEs 
+            ProfileLabel.Text = isEs
                 ? (_currentGame == GameType.ETS2 ? "Perfil de Euro Truck Simulator 2" : "Perfil de American Truck Simulator")
                 : (_currentGame == GameType.ETS2 ? "Euro Truck Simulator 2 Profile" : "American Truck Simulator Profile");
             TxtSaveGameLabel.Text = isEs ? "Partida Guardada" : "Save Game";
-            BtnLoadSelectedSave.Content = isEs ? "Cargar Partida Seleccionada" : "Load Selected Save";
-            
-            TxtEconomyHeader.Text = isEs ? "Economía y Progreso" : "Player Economy & Progress";
-            TxtMoneyLabel.Text = isEs ? "Dinero" : "Money (€)";
+            BtnLoadSelectedSave.Content = isEs ? "Cargar Partida" : "Load Save";
+            BtnRefreshProfiles.Content = isEs ? "Actualizar" : "Refresh";
+            BtnRefreshProfiles.ToolTip = isEs
+                ? "Vuelve a buscar perfiles y partidas nuevas. Útil si el juego creó un perfil o una partida mientras está abierto."
+                : "Scan again for new profiles and save games. Useful if the game created one while it is running.";
+
+            TxtEconomyHeader.Text = isEs ? "Tu dinero y nivel" : "Your money & level";
+            TxtEconomySub.Text = isEs
+                ? "Pon tu saldo y experiencia en lo que quieras (solo números enteros)."
+                : "Set your balance and experience to whatever you want (whole numbers only).";
+            TxtMoneyLabel.Text = isEs ? "Dinero (€)" : "Money (€)";
             TxtXpLabel.Text = isEs ? "Experiencia (XP)" : "Experience (XP)";
-            BtnSaveProfile.Content = isEs ? "Guardar Cambios de Perfil" : "Save Profile Changes";
+            BtnSaveProfile.Content = isEs ? "Guardar Cambios" : "Save Changes";
 
-            // Page 2: Trucks
-            TxtFleetHeader.Text = isEs ? "Mantenimiento de Flota" : "Fleet Maintenance & Actions";
-            TxtFixFleetDesc.Text = isEs ? "Repara al instante todos tus camiones y remolques al 100%." : "Instantly repair all your trucks and trailers to 100% condition.";
-            BtnFixFleet.Content = isEs ? "Reparar Camiones y Remolques" : "Fix All Trucks & Trailers";
-            TxtRefuelDesc.Text = isEs ? "Rellena el combustible de todos tus camiones al 100%." : "Refuel all your trucks to 100% (without repairing).";
-            BtnRefuel.Content = isEs ? "Rellena Combustible (100%)" : "Refill Fuel (100%)";
-            TxtFixCargoDesc.Text = isEs ? "Elimina el daño de tu carga activa al 0%." : "Fix the cargo damage of your active delivery back to 0%.";
+            // Page 2: Quick Fixes
+            string lockedHint = isEs
+                ? "Consejo: primero carga una partida (Inicio) para desbloquear estas herramientas."
+                : "Tip: load a save first (Home) to unlock these tools.";
+            TxtLockedHintFleet.Text = lockedHint;
+            TxtFixFleetTitle.Text = isEs ? "Repara todo de una vez" : "Fix everything at once";
+            TxtFixFleetDesc.Text = isEs
+                ? "¿Choque? Repara todos tus camiones y remolques al 100% al instante."
+                : "Accident? Repair all your trucks and trailers to 100% condition instantly.";
+            BtnFixFleet.Content = isEs ? "Reparar Todo" : "Repair Everything";
+            TxtRefuelTitle.Text = isEs ? "Llena los tanques" : "Fill your tanks";
+            TxtRefuelDesc.Text = isEs
+                ? "Rellena todos los camiones al 100%: se acabó quedarse sin combustible."
+                : "Refuel every truck to 100% - no more running on empty.";
+            BtnRefuel.Content = isEs ? "Rellenar Combustible (100%)" : "Refill Fuel (100%)";
+            TxtFixCargoTitle.Text = isEs ? "Salva tu entrega" : "Save your delivery";
+            TxtFixCargoDesc.Text = isEs
+                ? "¿Daño en la carga que llevas? Vuélvela al 0% y cobra el pago completo."
+                : "Damage on the cargo you're hauling? Reset it to 0% and keep the full payment.";
             BtnFixCargo.Content = isEs ? "Reparar Carga (0%)" : "Fix Cargo Damage (0%)";
+            TxtCargoWeightTitle.Text = isEs ? "Ajusta tu carga" : "Adjust your load";
             TxtCargoWeightLabel.Text = isEs ? "Peso de la Carga (Toneladas)" : "Cargo Weight (Tons)";
-            TxtCargoWeightDesc.Text = isEs 
-                ? "Modifica el peso de tu carga activa. Configúralo en 0 para un viaje sin peso, o auméntalo para un desafío."
-                : "Modify the weight of your active cargo. Set it to 0 for a weightless delivery, or make it heavier for a challenge.";
+            TxtCargoWeightDesc.Text = isEs
+                ? "Cambia el peso que llevas. 0 = liviana como una pluma, más = todo un desafío."
+                : "Set the weight you're hauling. 0 = light as a feather, more = a real challenge.";
             BtnSaveCargoWeight.Content = isEs ? "Actualizar Peso" : "Update Weight";
+            TxtDeliveryTimeTitle.Text = isEs ? "Compra más tiempo" : "Buy more time";
             TxtDeliveryTimeLabel.Text = isEs ? "Tiempo Restante para la Entrega (Horas)" : "Remaining Delivery Time (Hours)";
-            TxtDeliveryTimeDesc.Text = isEs 
-                ? "Modifica el tiempo restante para la entrega activa. No se permiten valores negativos; solo números positivos."
-                : "Modify the remaining time for the active delivery. Negative values are not allowed; only positive numbers are accepted.";
+            TxtDeliveryTimeDesc.Text = isEs
+                ? "¿A punto de llegar tarde? Añade más horas a la entrega activa (solo números positivos)."
+                : "About to be late? Add more hours to the active delivery (positive numbers only).";
             BtnSaveDeliveryTime.Content = isEs ? "Actualizar Tiempo" : "Update Time";
-            TxtTeleportHeader.Text = isEs ? "Teletransporte (Cámara 0)" : "Teleport (Camera 0)";
+            TxtTeleportTitle.Text = isEs ? "Teletranspórtate a un punto guardado" : "Teleport to a saved spot";
             TxtTeleportReqHeader.Text = isEs ? "Requisito: ¡Cámara 0 no activada!" : "Requirement: Camera 0 not enabled!";
-            TxtTeleportReqDesc.Text = isEs 
-                ? "Debes activar g_console y g_developer (ponerlos en 1) en tu archivo config.cfg en la carpeta de Documentos."
-                : "You must activate g_console and g_developer (set them to 1) in the config.cfg file located in your Documents folder.";
-            TxtTeleportInstructions.Text = isEs 
-                ? "Instrucciones: Guarda el juego y presiona Alt + F12 (como hace Truck Tools)."
-                : "Instructions: Save the game and press Alt + F12, as Truck Tools does.";
+            TxtTeleportReqDesc.Text = isEs
+                ? "Necesitas activar dos opciones de desarrollador (g_console y g_developer = 1) en el archivo config.cfg de tu carpeta de Documentos."
+                : "You need to enable two developer options (g_console and g_developer = 1) in the config.cfg file in your Documents folder.";
+            TxtTeleportInstructions.Text = isEs
+                ? "En el juego, guarda y presiona Alt + F12 para marcar el punto, vuelve y presiona Teletransportar."
+                : "In game, save and press Alt + F12 to mark the spot, then come back and press Teleport.";
             BtnTeleport.Content = isEs ? "Teletransportar" : "Teleport";
+            TxtLicensePlateTitle.Text = isEs ? "Diseña tu matrícula" : "Design your license plate";
+            TxtLicensePlateDesc.Text = isEs
+                ? "Escribe lo que quieras en la matrícula de tu camión y elige los colores. También puedes estamparla en el remolque acoplado."
+                : "Put whatever you want on your truck's plate and pick the colors. You can also stamp the same plate on the attached trailer.";
+            TxtPlateTextLabel.Text = isEs ? "Texto" : "Plate Text";
+            TxtPlateBgColorLabel.Text = isEs ? "Fondo" : "Background";
+            TxtPlateTextColorLabel.Text = isEs ? "Color del Texto" : "Text Color";
+            TxtPlatePreviewLabel.Text = isEs ? "Vista Previa" : "Preview";
+            ChkPlateColoredMargin.Content = isEs ? "Borde del color del texto" : "Colored border (uses text color)";
+            ChkPlateApplyTrailer.Content = isEs ? "Aplicar también al remolque acoplado" : "Apply to attached trailer too";
+            BtnSaveLicensePlate.Content = isEs ? "Aplicar Matrícula" : "Apply Plate";
 
-            // Page 3: World
-            TxtWorldHeader.Text = isEs ? "Trucos de Mundo y Mapa" : "World & Map Exploits";
-            TxtVisitGaragesDesc.Text = isEs 
-                ? "Descubre todas las ciudades sin comprar garajes. Esto te permite comprar garajes online luego."
-                : "Unlock every city without buying garages. Sets all undiscovered garages to the minimum (Small) so you can upgrade manually.";
-            BtnVisitGarages.Content = isEs ? "Descubrir Todos los Garajes" : "Visit All Garages";
-            TxtUpgradeGaragesDesc.Text = isEs 
-                ? "Mejora todos los garajes que ya posees al tamaño máximo (6 espacios)."
-                : "Upgrade every garage you already own to maximum size (6 slots). Does not buy garages you don't own yet.";
-            BtnUpgradeGarages.Content = isEs ? "Mejorar Garajes Propios" : "Upgrade All Owned Garages";
-            TxtBuyGaragesDesc.Text = isEs 
-                ? "Compra y mejora al máximo absolutamente todos los garajes a lo largo del mapa entero."
-                : "Purchase and fully upgrade every garage to maximum size (6 slots) across the entire map.";
-            BtnBuyGarages.Content = isEs ? "Comprar y Mejorar Todo" : "Buy All Garages";
+            // Page 3: Map & Garages
+            TxtLockedHintWorld.Text = lockedHint;
+            TxtVisitGaragesTitle.Text = isEs ? "Abre todo el mapa" : "Open the whole map";
+            TxtVisitGaragesDesc.Text = isEs
+                ? "Desbloquea todas las ciudades sin pagar nada. Luego podrás comprar un garaje en cualquier lugar."
+                : "Unlock every city without paying anything. You can buy a garage anywhere later.";
+            BtnVisitGarages.Content = isEs ? "Desbloquear Todas las Ciudades" : "Unlock All Cities";
+            TxtUpgradeGaragesTitle.Text = isEs ? "Haz más grandes tus garajes" : "Make your garages bigger";
+            TxtUpgradeGaragesDesc.Text = isEs
+                ? "Convierte todos los garajes que ya tienes en el tamaño más grande (6 espacios)."
+                : "Turn every garage you already own into the biggest size (6 parking slots).";
+            BtnUpgradeGarages.Content = isEs ? "Mejorar Todos los Garajes" : "Upgrade All Owned Garages";
+            TxtBuyGaragesTitle.Text = isEs ? "Dueño de todos los garajes" : "Own every garage";
+            TxtBuyGaragesDesc.Text = isEs
+                ? "Compra y mejora todos los garajes del mapa. Cuesta dinero del juego, ¡prepárate!"
+                : "Buy and fully upgrade every garage on the whole map. It costs real in-game money - be ready!";
+            BtnBuyGarages.Content = isEs ? "Comprar Todos los Garajes" : "Buy All Garages";
 
-            // Page 4: Tuning
-            TxtTuningHeader.Text = isEs ? "Tuning Pro y Trampas" : "Pro Tuning & Cheats";
-            TxtTuningDesc.Text = isEs 
-                ? "Habilita combustible extendido o maximiza todos tus niveles de habilidad del conductor."
-                : "Enable infinite fuel or completely max out all driver skills (ADR, Long Distance, etc).";
+            // Page 4: Power-Ups
+            TxtLockedHintTuning.Text = lockedHint;
+            TxtMaxSkillsTitle.Text = isEs ? "Sé el mejor conductor" : "Be the best driver";
+            TxtMaxSkillsDesc.Text = isEs
+                ? "Desbloquea todas las habilidades del conductor (ADR, Larga Distancia, etc.) al instante."
+                : "Unlock every driver skill (ADR, Long Distance, etc.) instantly.";
             BtnMaxSkills.Content = isEs ? "Maximizar Habilidades" : "Max Out All Skills";
-            BtnInfiniteFuel.Content = isEs ? "Combustible Extendido (Establecer km)" : "Extended Fuel (Set km)";
+            TxtInfiniteFuelTitle.Text = isEs ? "Casi nunca recargues" : "Almost never refuel";
+            TxtInfiniteFuelDesc.Text = isEs
+                ? "Aumenta muchísimo tu tanque. Tú eliges la cantidad con un cuadro sencillo."
+                : "Massively extend your fuel tank. You pick the amount with a simple box.";
+            BtnInfiniteFuel.Content = isEs ? "Combustible Extendido" : "Extended Fuel";
+            TxtRestoreFuelTitle.Text = isEs ? "Vuelve al tanque normal" : "Back to normal fuel";
+            TxtRestoreFuelDesc.Text = isEs
+                ? "Devuelve tu tanque a su tamaño original."
+                : "Put your fuel tank back to its original size.";
             BtnRestoreFuel.Content = isEs ? "Restaurar Combustible" : "Restore Fuel";
 
-            // Page 5: Freight Market
-            TxtFreightHeader.Text = isEs ? "Generador de Cargas" : "Custom Job Generator";
-            TxtSourceCityLabel.Text = isEs ? "Ciudad de Origen" : "Source City";
-            TxtSourceCompanyLabel.Text = isEs ? "Empresa de Origen" : "Source Company";
+            // Page 5: Custom Jobs
+            TxtLockedHintFreight.Text = lockedHint;
+            TxtFreightHeader.Text = isEs ? "Crea tu propio trabajo" : "Create your own job";
+            TxtFreightIntro.Text = isEs
+                ? "Elige dónde empieza el trabajo, dónde termina y qué carga llevas. La app hace el resto por ti."
+                : "Pick where the job starts, where it ends, and what cargo you carry. The app builds the rest for you.";
+            TxtFreightNote.Text = isEs
+                ? "Nota: crea un trabajo 'de empresa' (el remolque te lo dan), como los principales de la lista de trabajos del juego."
+                : "Note: It creates a company job (the trailer is provided), like the main ones in the game's job list.";
+            TxtSourceCityLabel.Text = isEs ? "Ciudad de Origen" : "Start City";
+            TxtSourceCompanyLabel.Text = isEs ? "Empresa de Origen" : "Start Company";
             TxtDestCityLabel.Text = isEs ? "Ciudad de Destino" : "Destination City";
             TxtDestCompanyLabel.Text = isEs ? "Empresa de Destino" : "Destination Company";
             TxtCargoLabel.Text = isEs ? "Carga / Mercancía" : "Cargo";
             TxtUrgencyLabel.Text = isEs ? "Urgencia" : "Urgency";
-            BtnInjectJob.Content = isEs ? "Inyectar Trabajo Personalizado" : "Inject Custom Job";
+            BtnInjectJob.Content = isEs ? "Crear Trabajo a Medida" : "Create Custom Job";
 
             // Page 6: Settings
             TxtSettingsTitle.Text = isEs ? "Configuración de la Aplicación" : "Application Settings";
@@ -362,6 +461,10 @@ namespace TruckStudio
             ComboThemeDark.Content = isEs ? "Tema Oscuro" : "Dark Theme";
             ComboThemeLight.Content = isEs ? "Tema Claro" : "Light Theme";
             BtnCheckUpdates.Content = isEs ? "Buscar Actualizaciones" : "Check for Updates";
+            TxtUpdateBadge.Text = isEs ? "Actualización" : "Update";
+            BtnUpdateBadge.ToolTip = isEs
+                ? "¡Hay una nueva versión disponible! Haz clic para actualizar."
+                : "A new version is available! Click to update.";
         }
 
         private MessageBoxResult ShowLocalizedMessageBox(string enMessage, string esMessage, string enTitle, string esTitle, MessageBoxButton buttons = MessageBoxButton.OK, MessageBoxImage image = MessageBoxImage.Information)

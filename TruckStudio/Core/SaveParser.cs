@@ -1365,5 +1365,265 @@ namespace TruckStudio.Core
             return -1;
         }
 
+        public class LicensePlateData
+        {
+            public string Text;
+            public string BgColorRgb;   // RRGGBB
+            public string TextColorRgb; // RRGGBB
+            public bool ColorMargin;
+        }
+
+        private static string ExtractBlockAt(string content, int headerIdx)
+        {
+            if (headerIdx < 0) return null;
+            int openBrace = content.IndexOf('{', headerIdx);
+            if (openBrace == -1) return null;
+            int closeBrace = FindClosingBrace(content, openBrace);
+            if (closeBrace == -1) return null;
+            return content.Substring(headerIdx, closeBrace - headerIdx + 1);
+        }
+
+        /// <summary>
+        /// Locates the active truck's unit block by walking player -> assigned_vehicles ->
+        /// player_vehicles -> vehicle, the same chain the game uses in 1.5x saves.
+        /// Returns the header index of the vehicle unit, or -1 if not found.
+        /// </summary>
+        private static int FindTruckBlockStart(string saveContent)
+        {
+            try
+            {
+                var playerMatch = Regex.Match(saveContent, @"(?m)^\s*player\s*:\s*[_a-zA-Z0-9.]+\s*\{");
+                if (!playerMatch.Success) return -1;
+
+                string playerBlock = ExtractBlockAt(saveContent, playerMatch.Index);
+                var assignedMatch = playerBlock != null ? Regex.Match(playerBlock, @"(?m)^\s*assigned_vehicles:\s*([_a-zA-Z0-9.]+)") : Match.Empty;
+                if (!assignedMatch.Success) return -1;
+                string pvId = assignedMatch.Groups[1].Value.Trim();
+                if (pvId == "null" || pvId.Length == 0) return -1;
+
+                var pvHeader = Regex.Match(saveContent, $@"(?m)^[ \t]*player_vehicles\s*:\s*{Regex.Escape(pvId)}\s*\{{");
+                string pvBlock = ExtractBlockAt(saveContent, pvHeader.Success ? pvHeader.Index : -1);
+                var vehicleMatch = pvBlock != null ? Regex.Match(pvBlock, @"(?m)^\s*vehicle:\s*([_a-zA-Z0-9.]+)") : Match.Empty;
+                if (!vehicleMatch.Success) return -1;
+                string vehicleId = vehicleMatch.Groups[1].Value.Trim();
+                if (vehicleId == "null" || vehicleId.Length == 0) return -1;
+
+                var unitMatch = Regex.Match(saveContent, $@"(?m)^\s*[_a-zA-Z0-9]+\s*:\s*{Regex.Escape(vehicleId)}\s*\{{");
+                return unitMatch.Success ? unitMatch.Index : -1;
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
+        /// <summary>
+        /// Finds the trailer currently attached to the player: active job trailer first,
+        /// then player.assigned_trailer (legacy), then player_vehicles.trailer (owned trailer).
+        /// Returns the trailer unit id, or null if none attached.
+        /// </summary>
+        private static string FindAttachedTrailerId(string saveContent)
+        {
+            try
+            {
+                var currentJobMatch = Regex.Match(saveContent, @"(?m)^\s*current_job:\s*([_a-zA-Z0-9.]+)");
+                if (currentJobMatch.Success)
+                {
+                    string currentJobId = currentJobMatch.Groups[1].Value.Trim();
+                    if (currentJobId != "null" && currentJobId.Length > 0)
+                    {
+                        string jobBlock = ExtractBlockAt(saveContent, saveContent.IndexOf($"player_job : {currentJobId}"));
+                        var jobTrailerMatch = jobBlock != null ? Regex.Match(jobBlock, @"(?m)^\s*(?:trailer|company_trailer):\s*([_a-zA-Z0-9.]+)") : Match.Empty;
+                        if (jobTrailerMatch.Success)
+                        {
+                            string tId = jobTrailerMatch.Groups[1].Value.Trim();
+                            if (tId != "null" && tId.Length > 0) return tId;
+                        }
+                    }
+                }
+
+                var playerMatch = Regex.Match(saveContent, @"(?m)^\s*player\s*:\s*[_a-zA-Z0-9.]+\s*\{");
+                if (playerMatch.Success)
+                {
+                    string playerBlock = ExtractBlockAt(saveContent, playerMatch.Index);
+                    var assignedTrailerMatch = playerBlock != null ? Regex.Match(playerBlock, @"(?m)^\s*assigned_trailer:\s*([_a-zA-Z0-9.]+)") : Match.Empty;
+                    if (assignedTrailerMatch.Success)
+                    {
+                        string tId = assignedTrailerMatch.Groups[1].Value.Trim();
+                        if (tId != "null" && tId.Length > 0) return tId;
+                    }
+                }
+
+                var assignedVehiclesMatch = Regex.Match(saveContent, @"(?m)^\s*assigned_vehicles:\s*([_a-zA-Z0-9.]+)");
+                if (assignedVehiclesMatch.Success)
+                {
+                    string assignedVehicle = assignedVehiclesMatch.Groups[1].Value.Trim();
+                    if (assignedVehicle != "null" && assignedVehicle.Length > 0)
+                    {
+                        var pvHeader = Regex.Match(saveContent, $@"(?m)^[ \t]*player_vehicles\s*:\s*{Regex.Escape(assignedVehicle)}\s*\{{");
+                        string pvBlock = ExtractBlockAt(saveContent, pvHeader.Success ? pvHeader.Index : -1);
+                        var trailerMatch = pvBlock != null ? Regex.Match(pvBlock, @"(?m)^\s*trailer:\s*([_a-zA-Z0-9.]+)") : Match.Empty;
+                        if (trailerMatch.Success)
+                        {
+                            string tId = trailerMatch.Groups[1].Value.Trim();
+                            if (tId != "null" && tId.Length > 0) return tId;
+                        }
+                    }
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        private static System.Collections.Generic.List<string> CollectTrailerChain(string saveContent, string firstTrailerId)
+        {
+            var ids = new System.Collections.Generic.List<string>();
+            string current = firstTrailerId;
+            int guard = 0;
+            while (!string.IsNullOrEmpty(current) && current != "null" && guard < 20)
+            {
+                guard++;
+                ids.Add(current);
+                var header = Regex.Match(saveContent, $@"(?m)^[ \t]*trailer\s*:\s*{Regex.Escape(current)}\s*\{{");
+                string block = ExtractBlockAt(saveContent, header.Success ? header.Index : -1);
+                var slaveMatch = block != null ? Regex.Match(block, @"(?m)^\s*(?:slave|slave_trailer):\s*([_a-zA-Z0-9.]+)") : Match.Empty;
+                if (!slaveMatch.Success) break;
+                current = slaveMatch.Groups[1].Value.Trim();
+            }
+            return ids;
+        }
+
+        // The game renders plates from a text markup; these are the two templates the
+        // reference implementation uses (with and without the margin painted in text color).
+        // Text is centered with the same markup the game's own plate template uses.
+        private static string BuildLicensePlateMarkup(string bgGameColor, string textGameColor, string plateText, bool colorMargin)
+        {
+            if (colorMargin)
+            {
+                return $"<margin left=-15><color value=ff{textGameColor}><img src=/material/ui/white.mat height=50 width=200><ret><offset hshift=-0.1 vshift=7.5><img src=/material/ui/white.mat height=35 width=155 color=ff{bgGameColor}><ret><align hstyle=center vstyle=center>{plateText}|belgium";
+            }
+            return $"<color value=ff{bgGameColor}><margin left=-15><img src=/material/ui/white.mat xscale=stretch yscale=stretch><ret><align hstyle=center vstyle=center><font xscale=1 yscale=1 ><color value=ff{textGameColor}>{plateText}</align>|belgium";
+        }
+
+        // The game stores plate colors as BBGGRR; the UI works with RRGGBB.
+        private static string SwapRgbPairs(string hex)
+        {
+            if (hex == null || hex.Length != 6) return hex;
+            return hex.Substring(4, 2) + hex.Substring(2, 2) + hex.Substring(0, 2);
+        }
+
+        private static string ReadLicensePlateValue(string truckBlock)
+        {
+            var match = Regex.Match(truckBlock, @"(?m)^[ \t]*license_plate:[ \t]*""([^""]*)""");
+            return match.Success ? match.Groups[1].Value : null;
+        }
+
+        /// <summary>
+        /// Reads the current truck's license plate (text + colors) so the UI can pre-fill.
+        /// Returns null when the truck has no license_plate accessory line.
+        /// </summary>
+        public static LicensePlateData ExtractLicensePlate(string saveContent)
+        {
+            try
+            {
+                string truckBlock = ExtractBlockAt(saveContent, FindTruckBlockStart(saveContent));
+                if (truckBlock == null) return null;
+
+                string value = ReadLicensePlateValue(truckBlock);
+                if (value == null) return null;
+
+                // Game color values are AARRGGBB-in-BGR: "ff2222BF" (our templates) and
+                // "FF3E2EAC" (game-written) both carry the 6 BGR digits after 2 alpha digits.
+                bool colorMargin = value.Contains("offset hshift=-0.1");
+                bool stretchTemplate = value.Contains("xscale=stretch");
+                var colorMatches = Regex.Matches(value, @"(?:color value=| color=)[0-9a-fA-F]{2}([0-9a-fA-F]{6})");
+                string first = colorMatches.Count > 0 ? colorMatches[0].Groups[1].Value.ToUpperInvariant() : null;
+                string second = colorMatches.Count > 1 ? colorMatches[1].Groups[1].Value.ToUpperInvariant() : null;
+
+                string bgGame, textGame;
+                if (colorMargin || !stretchTemplate)
+                {
+                    // Margin template and unknown (game-written) templates put the text color first
+                    textGame = first;
+                    bgGame = second;
+                }
+                else
+                {
+                    bgGame = first;
+                    textGame = second;
+                }
+                if (bgGame == null) bgGame = "FFFFFF";
+                if (textGame == null) textGame = "111111";
+
+                string text = Regex.Replace(value, "<[^>]*>", "").Replace("|belgium", "").Trim();
+                return new LicensePlateData
+                {
+                    Text = text,
+                    BgColorRgb = SwapRgbPairs(bgGame),
+                    TextColorRgb = SwapRgbPairs(textGame),
+                    ColorMargin = colorMargin
+                };
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static string ReplaceLicensePlateLine(string content, int headerIdx, string markup)
+        {
+            if (headerIdx < 0) return null;
+            int openBrace = content.IndexOf('{', headerIdx);
+            if (openBrace == -1) return null;
+            int closeBrace = FindClosingBrace(content, openBrace);
+            if (closeBrace == -1) return null;
+
+            string block = content.Substring(headerIdx, closeBrace - headerIdx + 1);
+            if (!Regex.IsMatch(block, @"(?m)^[ \t]*license_plate:")) return null;
+
+            string newBlock = Regex.Replace(block, @"(?m)^([ \t]*license_plate:)[^\r\n]*",
+                m => m.Groups[1].Value + " \"" + markup + "\"");
+            return content.Substring(0, headerIdx) + newBlock + content.Substring(closeBrace + 1);
+        }
+
+        /// <summary>
+        /// Writes a new license plate onto the active truck (and optionally onto the attached
+        /// trailer plus its slaves). Returns the updated content, or null when the truck has
+        /// no license_plate line to replace. trailerApplied reports the trailer outcome.
+        /// </summary>
+        public static string SetLicensePlate(string saveContent, string plateText, string bgRgb, string textRgb, bool colorMargin, bool applyToTrailer, out bool trailerApplied)
+        {
+            trailerApplied = false;
+            try
+            {
+                string markup = BuildLicensePlateMarkup(SwapRgbPairs(bgRgb), SwapRgbPairs(textRgb), plateText, colorMargin);
+
+                string updated = ReplaceLicensePlateLine(saveContent, FindTruckBlockStart(saveContent), markup);
+                if (updated == null) return null;
+
+                if (applyToTrailer)
+                {
+                    string trailerId = FindAttachedTrailerId(saveContent);
+                    if (!string.IsNullOrEmpty(trailerId))
+                    {
+                        foreach (var id in CollectTrailerChain(saveContent, trailerId))
+                        {
+                            var header = Regex.Match(updated, $@"(?m)^[ \t]*trailer\s*:\s*{Regex.Escape(id)}\s*\{{");
+                            string after = ReplaceLicensePlateLine(updated, header.Success ? header.Index : -1, markup);
+                            if (after == null) break;
+                            updated = after;
+                            trailerApplied = true;
+                        }
+                    }
+                }
+
+                return updated;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
     }
 }

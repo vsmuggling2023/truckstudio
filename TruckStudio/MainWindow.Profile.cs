@@ -39,6 +39,8 @@ namespace TruckStudio
             PanelFreightEdit.IsEnabled = false;
             PanelFreightEdit.Opacity = 0.5;
 
+            SetLockedHints(false);
+
             // Update label and translations
             TranslateUI();
 
@@ -79,6 +81,11 @@ namespace TruckStudio
 
         private void LoadSave_Click(object sender, RoutedEventArgs e)
         {
+            LoadSaveSelected(true);
+        }
+
+        private bool LoadSaveSelected(bool showSuccessBox)
+        {
             if (SaveComboBox.SelectedItem is ETS2Save selectedSave)
             {
                 _currentSavePath = System.IO.Path.Combine(selectedSave.SavePath, "game.sii");
@@ -86,7 +93,7 @@ namespace TruckStudio
                 
                 if (_currentSaveContent != null)
                 {
-                    // Debug: export decrypted game.sii to desktop (disabled in v0.3.0-alpha)
+                    // Debug: export decrypted game.sii to desktop (disabled in v0.3.1-alpha)
                     // string exportPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "game_debug.sii");
                     // System.IO.File.WriteAllText(exportPath, _currentSaveContent);
 
@@ -105,9 +112,21 @@ namespace TruckStudio
                     TxtCargoWeight.Text = SaveParser.ExtractCargoWeight(_currentSaveContent);
                     TxtDeliveryTime.Text = SaveParser.ExtractDeliveryTime(_currentSaveContent);
 
+                    var plate = SaveParser.ExtractLicensePlate(_currentSaveContent);
+                    if (plate != null)
+                    {
+                        TxtLicensePlate.Text = plate.Text;
+                        CbPlateBgColor.Text = plate.BgColorRgb;
+                        CbPlateTextColor.Text = plate.TextColorRgb;
+                        ChkPlateColoredMargin.IsChecked = plate.ColorMargin;
+                    }
+                    UpdatePlatePreview();
+
                     // Enable Freight Market panel
                     PanelFreightEdit.IsEnabled = true;
                     PanelFreightEdit.Opacity = 1;
+
+                    SetLockedHints(true);
 
                     // Parse cities, companies, and cargoes
                     _cityCompanies = SaveParser.ExtractCitiesAndCompanies(_currentSaveContent);
@@ -129,18 +148,70 @@ namespace TruckStudio
                         CbCargo.SelectedIndex = 0;
                     }
 
-                    
-                    ShowLocalizedMessageBox("Profile successfully loaded! You can now edit.", "¡Perfil cargado con éxito! Ya puedes editar los valores.", "Success", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                    if (showSuccessBox)
+                    {
+                        ShowLocalizedMessageBox("Profile successfully loaded! You can now edit.", "¡Perfil cargado con éxito! Ya puedes editar los valores.", "Success", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                    return true;
                 }
                 else
                 {
                     ShowLocalizedMessageBox("Failed to decrypt game.sii", "No se pudo desencriptar game.sii", "Error", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return false;
                 }
             }
             else
             {
                 ShowLocalizedMessageBox("Please select a save first.", "Por favor, selecciona una partida primero.", "Info", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
+                return false;
             }
+        }
+
+        private void RefreshProfiles_Click(object sender, RoutedEventArgs e)
+        {
+            string prevProfileName = (ProfileComboBox.SelectedItem as ETS2Profile)?.ProfileName;
+            string prevSavePath = _currentSavePath;
+
+            LoadProfilesForSelectedGame();
+
+            // Restore previous profile selection if it still exists
+            if (!string.IsNullOrEmpty(prevProfileName))
+            {
+                foreach (object item in ProfileComboBox.Items)
+                {
+                    if (item is ETS2Profile p && string.Equals(p.ProfileName, prevProfileName, StringComparison.Ordinal))
+                    {
+                        ProfileComboBox.SelectedItem = item;
+                        break;
+                    }
+                }
+            }
+
+            // Restore previous save selection and reload it silently if it still exists
+            bool reloaded = false;
+            if (!string.IsNullOrEmpty(prevSavePath) && SaveComboBox.Items != null)
+            {
+                string prevSaveDir = System.IO.Path.GetDirectoryName(prevSavePath);
+                foreach (object item in SaveComboBox.Items)
+                {
+                    if (item is ETS2Save s && string.Equals(s.SavePath, prevSaveDir, StringComparison.OrdinalIgnoreCase))
+                    {
+                        SaveComboBox.SelectedItem = item;
+                        reloaded = true;
+                        break;
+                    }
+                }
+            }
+
+            if (reloaded)
+            {
+                LoadSaveSelected(false);
+            }
+
+            ShowLocalizedMessageBox(
+                "Profiles and saves reloaded. Any new profile or save created by the game (even while it's running) now appears in the lists.",
+                "Perfiles y partidas recargados. Cualquier perfil o partida nueva que cree el juego (aunque esté abierto) ya aparece en las listas.",
+                "Refreshed", "Actualizado", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void SaveProfileChanges_Click(object sender, RoutedEventArgs e)
