@@ -491,7 +491,7 @@
                                             <TextBlock x:Name="TxtCargoWeightDesc" Text="Set the weight you're hauling. 0 = light as a feather, more = a real challenge." Style="{StaticResource CardDesc}" Margin="0,0,0,12"/>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBox x:Name="TxtCargoWeight" Width="180" Style="{StaticResource ModernTextBox}" Margin="0,0,15,0"/>
-                                                <Button x:Name="BtnSaveCargoWeight" Content="Update Weight" Style="{StaticResource PrimaryButton}" Background="#10b981" Padding="25,12"/>
+                                                <Button x:Name="BtnSaveCargoWeight" Content="Update Weight" Style="{StaticResource PrimaryButton}" Background="#10b981" Padding="25,12" Click="SaveCargoWeight_Click"/>
                                             </StackPanel>
                                         </StackPanel>
                                     </Grid>
@@ -513,7 +513,7 @@
                                             <TextBlock x:Name="TxtDeliveryTimeDesc" Text="About to be late? Add more hours to the active delivery (positive numbers only)." Style="{StaticResource CardDesc}" Margin="0,0,0,12"/>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBox x:Name="TxtDeliveryTime" Width="180" Style="{StaticResource ModernTextBox}" Margin="0,0,15,0"/>
-                                                <Button x:Name="BtnSaveDeliveryTime" Content="Update Time" Style="{StaticResource PrimaryButton}" Background="#0ea5e9" Padding="25,12"/>
+                                                <Button x:Name="BtnSaveDeliveryTime" Content="Update Time" Style="{StaticResource PrimaryButton}" Background="#0ea5e9" Padding="25,12" Click="SaveDeliveryTime_Click"/>
                                             </StackPanel>
                                         </StackPanel>
                                     </Grid>
@@ -792,7 +792,7 @@
             </Grid>
 
             <!-- Version Number -->
-            <TextBlock Text="v0.3.1-alpha" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,15,15" Foreground="#64748b" FontSize="12" IsHitTestVisible="False" Panel.ZIndex="10"/>
+            <TextBlock Text="v0.3.2-alpha" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,15,15" Foreground="#64748b" FontSize="12" IsHitTestVisible="False" Panel.ZIndex="10"/>
         </Grid>
     </Border>
 </Window>

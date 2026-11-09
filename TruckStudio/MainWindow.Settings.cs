@@ -46,7 +46,7 @@ namespace TruckStudio
             }
         }
 
-        private const string CurrentAppVersion = "0.3.1";
+        private const string CurrentAppVersion = "0.3.2";
 
         private UpdateInfo _latestUpdateInfo;
 

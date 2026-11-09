@@ -22,12 +22,13 @@
     <EmbeddedResource Include="TruckStudioUpdater.exe" Link="Resources\TruckStudioUpdater.exe" />
   </ItemGroup>
 
-  <Target Name="BuildUpdater" BeforeTargets="BeforeBuild">
+  <!-- TruckStudioUpdater.exe ya viene embebido como recurso; no hay proyecto fuente en este repo -->
+  <!-- <Target Name="BuildUpdater" BeforeTargets="BeforeBuild">
     <MSBuild Projects="$(MSBuildProjectDirectory)\..\TruckStudioUpdater\TruckStudioUpdater.csproj"
              Targets="Build"
              Properties="Configuration=$(Configuration)" />
     <Copy SourceFiles="$(MSBuildProjectDirectory)\..\TruckStudioUpdater\bin\$(Configuration)\net472\TruckStudioUpdater.exe"
           DestinationFolder="$(MSBuildProjectDirectory)"
           SkipUnchangedFiles="true" />
-  </Target>
+  </Target> -->
 </Project>
